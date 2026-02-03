@@ -3,315 +3,492 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GEO-RELIC: OMNI-TITAN ENGINE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
+    <title>Geo-Pop: Titanium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --neon-primary: #00ff88; --neon-danger: #ff0055; --neon-info: #00d9ff;
-            --gold: #ffcc00; --deep-bg: #020205; --panel-bg: #0a0a0f;
-            --glass: rgba(255, 255, 255, 0.03);
+            /* Palette - Soft UI */
+            --bg: #e6e9ef;
+            --shadow-light: #ffffff;
+            --shadow-dark: #b8b9be;
+            --primary: #5b6af0;
+            --primary-dark: #404bb5;
+            --accent: #ff5e78;
+            --success: #2ecc71;
+            --text-main: #4a5568;
+            --text-mute: #a0aec0;
         }
 
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
         body { 
-            background: #000; color: #e0e0e0; font-family: 'JetBrains Mono', monospace;
-            margin: 0; display: flex; justify-content: center; align-items: center; 
-            height: 100vh; overflow: hidden;
+            background: #d1d5db; 
+            font-family: 'Nunito', sans-serif;
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden;
         }
 
-        /* HARDWARE CASING */
-        #mobile-chassis {
-            width: 430px; height: 900px; background: var(--deep-bg);
-            border: 8px solid #1a1a2e; border-radius: 60px; position: relative;
-            display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 0 80px rgba(0, 255, 136, 0.1);
+        /* --- DEVICE FRAME --- */
+        #app-frame {
+            width: 100%; max-width: 410px; height: 100%; max-height: 850px;
+            background: var(--bg);
+            border-radius: 35px;
+            box-shadow: 25px 25px 50px rgba(0,0,0,0.15), -10px -10px 30px rgba(255,255,255,0.8);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 6px solid #e6e9ef;
         }
 
-        /* TOP STATUS BAR */
-        .status-bar { height: 140px; padding: 45px 30px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: linear-gradient(to bottom, #000, transparent); z-index: 100; }
-        .data-pill { background: var(--panel-bg); border: 1px solid #222; padding: 10px; border-radius: 12px; position: relative; overflow: hidden; }
-        .label { font-size: 9px; text-transform: uppercase; color: #555; font-weight: 900; }
-        .value { font-family: 'Orbitron'; font-size: 14px; color: var(--neon-primary); }
-        .progress-fill { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--neon-primary); transition: 0.5s; }
-
-        /* THE WORLD MAP SYSTEM */
-        #map-viewport { flex-grow: 1; position: relative; background: #050508; overflow: hidden; }
-        #world-grid { 
-            position: absolute; width: 1000px; height: 1000px; 
-            background-image: radial-gradient(#1a1a2e 1px, transparent 1px);
-            background-size: 40px 40px; transition: 0.2s ease-out;
-        }
-        .node { 
-            position: absolute; width: 50px; height: 50px; background: var(--glass); 
-            border: 2px solid var(--neon-info); border-radius: 50%; display: grid; 
-            place-items: center; font-size: 20px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
-        }
-        .node.completed { border-color: #444; color: #444; }
-        #player-token { 
-            position: absolute; width: 30px; height: 30px; background: var(--neon-primary); 
-            border-radius: 5px; z-index: 50; transition: 0.3s; box-shadow: 0 0 20px var(--neon-primary);
+        /* --- HEADER & HUD --- */
+        .hud-area {
+            padding: 30px 24px 15px;
+            z-index: 20;
+            background: var(--bg);
         }
 
-        /* FIDGET DASHBOARD */
-        #fidget-deck { position: absolute; bottom: 100px; left: 0; width: 100%; height: 80px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: space-around; padding: 0 20px; border-top: 1px solid #222; }
-        .fidget-spinner-ui { width: 50px; height: 50px; background: #111; border-radius: 50%; border: 2px dashed var(--neon-primary); animation: spin 2s linear infinite; cursor: pointer; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .fidget-toggle { width: 60px; height: 30px; background: #333; border-radius: 20px; position: relative; cursor: pointer; }
-        .fidget-toggle::after { content: ''; position: absolute; width: 26px; height: 26px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: 0.2s; }
-        .fidget-toggle.on::after { left: 32px; background: var(--neon-primary); }
+        .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .logo { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin: 0; }
+        .save-badge { font-size: 0.65rem; font-weight: 800; color: var(--text-mute); background: #dde1e7; padding: 4px 8px; border-radius: 8px; }
 
-        /* MODAL OVERLAYS */
-        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 500; display: none; padding: 60px 30px; flex-direction: column; }
-        .btn-action { background: #111; border: 1px solid #333; color: #fff; padding: 20px; border-radius: 15px; margin-bottom: 10px; font-family: 'Orbitron'; cursor: pointer; text-align: left; }
-        .btn-action:hover { border-color: var(--neon-primary); }
+        .wallet-card {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 16px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+        }
 
-        /* QUIZ ENGINE */
-        #quiz-overlay { z-index: 600; background: var(--deep-bg); }
-        .choice-container { display: grid; gap: 10px; margin-top: 40px; }
-        .choice-btn { background: #0f172a; border: 1px solid #1e293b; color: #fff; padding: 25px; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .choice-btn:active { transform: scale(0.98); }
+        .stat-block { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.7rem; font-weight: 700; color: var(--text-mute); text-transform: uppercase; margin-bottom: 2px; }
+        .stat-value { font-size: 1.3rem; font-weight: 900; color: var(--text-main); }
+        .stat-sub { font-size: 0.85rem; font-weight: 700; color: var(--success); }
 
-        /* NAVIGATION BAR */
-        .bottom-tabs { height: 90px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #222; }
-        .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 10px; cursor: pointer; font-weight: 900; }
-        .tab.active { color: var(--neon-primary); }
+        /* --- SCROLLABLE VIEWPORT --- */
+        #main-view {
+            flex-grow: 1;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px 24px;
+            /* Hide scrollbar */
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+        }
+        #main-view::-webkit-scrollbar { display: none; }
 
-        /* WEATHER EFFECTS */
-        #weather-layer { position: absolute; inset: 0; pointer-events: none; z-index: 200; opacity: 0; transition: 1s; }
-        .storm { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(2px); }
+        .screen { display: none; opacity: 0; transform: translateY(15px); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .screen.active { display: block; opacity: 1; transform: translateY(0); }
+
+        /* --- NEUMORPHIC ELEMENTS --- */
+        .neu-btn {
+            border: none; outline: none; background: var(--bg);
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+            border-radius: 16px; color: var(--text-main); font-weight: 800;
+            cursor: pointer; transition: all 0.15s ease; position: relative;
+        }
+        .neu-btn:active:not(:disabled) {
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            transform: scale(0.98);
+        }
+        .neu-btn:disabled {
+            opacity: 0.6; cursor: not-allowed;
+            box-shadow: none; border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* --- FIDGET SCREEN --- */
+        .fidget-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
+        .pop-btn {
+            aspect-ratio: 1; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.8rem; color: var(--accent);
+        }
+        .pop-btn.popped {
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            color: transparent;
+        }
+
+        .spinner-wrapper {
+            margin-top: 20px; text-align: center;
+            background: var(--bg);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+        }
+        #spinner-wheel {
+            width: 100px; height: 100px; margin: 0 auto;
+            border-radius: 50%; border: 6px solid var(--bg);
+            background: conic-gradient(var(--accent) 0% 25%, var(--primary) 25% 50%, var(--success) 50% 75%, var(--bg) 75%);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            cursor: pointer; position: relative;
+        }
+        #spinner-wheel::after {
+            content: ''; position: absolute; inset: 25%; background: var(--bg); border-radius: 50%;
+            box-shadow: inset 2px 2px 5px var(--shadow-dark);
+        }
+
+        /* --- QUIZ SCREEN --- */
+        .quiz-container {
+            background: var(--bg); border-radius: 20px; padding: 25px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            text-align: center;
+        }
+        .quiz-opt { width: 100%; padding: 18px; margin-top: 12px; text-align: left; font-size: 1rem; }
+        .quiz-opt.correct { background: var(--success); color: white; box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2); }
+        .quiz-opt.wrong { background: var(--accent); color: white; }
+
+        /* --- SHOP SCREEN --- */
+        .shop-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg); padding: 16px; border-radius: 18px; margin-bottom: 16px;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+        }
+        .shop-btn {
+            background: var(--primary); color: white; padding: 10px 18px; font-size: 0.85rem;
+            box-shadow: 3px 3px 6px rgba(91, 106, 240, 0.3), -3px -3px 6px var(--shadow-light);
+        }
+        .shop-btn:active:not(:disabled) { background: var(--primary-dark); }
+        .shop-btn.cant-afford { background: #cbd5e0; color: #718096; box-shadow: none; pointer-events: none; }
+
+        /* --- NAV BAR --- */
+        .nav-bar {
+            height: 85px; background: var(--bg); z-index: 20;
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid rgba(0,0,0,0.03); padding-bottom: 10px;
+        }
+        .nav-icon {
+            font-size: 1.4rem; padding: 12px; border-radius: 14px;
+            color: var(--text-mute); cursor: pointer; transition: 0.2s;
+        }
+        .nav-icon.active {
+            color: var(--primary);
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+        }
+
+        /* --- ANIMATIONS --- */
+        .float-text {
+            position: absolute; font-weight: 800; font-size: 1.1rem; color: var(--success);
+            pointer-events: none; animation: floatUp 0.8s forwards; z-index: 100;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+        }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+
     </style>
 </head>
 <body>
 
-<div id="mobile-chassis">
-    <div id="weather-layer"></div>
-
-    <div class="status-bar">
-        <div class="data-pill">
-            <div class="label">Integrity</div>
-            <div class="value" id="hp-val">100%</div>
-            <div class="progress-fill" id="hp-bar" style="width: 100%;"></div>
+<div id="app-frame">
+    
+    <div class="hud-area">
+        <div class="title-row">
+            <h1 class="logo">GEO-POP</h1>
+            <div class="save-badge" id="status-badge">READY</div>
         </div>
-        <div class="data-pill">
-            <div class="label">Credits</div>
-            <div class="value" id="gold-val" style="color:var(--gold)">0</div>
-        </div>
-    </div>
-
-    <div id="map-viewport">
-        <div id="world-grid">
-            <div id="player-token"></div>
+        <div class="wallet-card">
+            <div class="stat-block">
+                <span class="stat-label">Total Funds</span>
+                <span class="stat-value">$<span id="ui-cash">0</span></span>
             </div>
+            <div class="stat-block" style="text-align: right;">
+                <span class="stat-label">Passive Income</span>
+                <span class="stat-sub">+<span id="ui-rate">0</span>/sec</span>
+            </div>
+        </div>
     </div>
 
-    <div id="fidget-deck">
-        <div class="fidget-spinner-ui" onclick="fidgetClick(25)"></div>
-        <div class="fidget-toggle" id="f-toggle" onclick="fidgetToggle()"></div>
-        <div style="width:80px; height:10px; background:#222; border-radius:5px;"><div id="f-slide" style="width:0%; height:100%; background:var(--neon-info)"></div></div>
+    <div id="main-view">
+        
+        <div id="scr-fidget" class="screen active">
+            <h3 style="color:var(--text-mute); margin: 0 0 15px 5px; font-size:0.9rem;">HAPTIC BOARD</h3>
+            <div class="fidget-grid" id="fidget-container"></div>
+            
+            <div class="spinner-wrapper">
+                <h3 style="color:var(--text-mute); margin: 0 0 15px 0; font-size:0.9rem;">LUCKY WHEEL</h3>
+                <div id="spinner-wheel" onclick="App.spin()"></div>
+                <p style="font-size:0.75rem; color:var(--text-mute); margin-top:10px; font-weight:700;">TAP TO SPIN</p>
+            </div>
+        </div>
+
+        <div id="scr-quiz" class="screen">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="color:var(--text-mute); margin:0; font-size:0.9rem;">EXPEDITION QUIZ</h3>
+                <span style="font-size:0.75rem; font-weight:800; color:var(--accent);">STREAK: <span id="ui-streak">0</span>🔥</span>
+            </div>
+            <div id="quiz-inject" class="quiz-container">
+                </div>
+        </div>
+
+        <div id="scr-shop" class="screen">
+            <h3 style="color:var(--text-mute); margin: 0 0 15px 5px; font-size:0.9rem;">UPGRADES</h3>
+            <div id="shop-inject">
+                </div>
+        </div>
+
     </div>
 
-    <div id="vault-screen" class="ui-screen">
-        <h1 style="font-family:'Orbitron'; color:var(--neon-info)">THE ARCHIVE</h1>
-        <div id="relic-list" style="overflow-y:auto"></div>
-        <button class="btn-action" onclick="closeScreens()" style="margin-top:auto; text-align:center">CLOSE</button>
+    <div class="nav-bar">
+        <div class="nav-icon active" onclick="App.nav('scr-fidget', this)">⚪</div>
+        <div class="nav-icon" onclick="App.nav('scr-quiz', this)">🗺️</div>
+        <div class="nav-icon" onclick="App.nav('scr-shop', this)">🛍️</div>
     </div>
 
-    <div id="quiz-overlay" class="ui-screen">
-        <div id="quiz-content"></div>
-    </div>
-
-    <div id="shop-screen" class="ui-screen">
-        <h1 style="font-family:'Orbitron'; color:var(--gold)">BLACK MARKET</h1>
-        <div class="btn-action" onclick="buy('nanite', 5000)">Repulsor Nanites (Shield) - 5,000G</div>
-        <div class="btn-action" onclick="buy('sat', 15000)">Satellite Link (Skip) - 15,000G</div>
-        <div class="btn-action" onclick="buy('core', 50000)">Omni-Core (Legendary) - 50,000G</div>
-        <button class="btn-action" onclick="closeScreens()" style="margin-top:auto; text-align:center">CLOSE</button>
-    </div>
-
-    <div class="bottom-tabs">
-        <div class="tab active" onclick="closeScreens()">MAP</div>
-        <div class="tab" onclick="openScreen('vault-screen')">VAULT</div>
-        <div class="tab" onclick="openScreen('shop-screen')">MARKET</div>
-        <div class="tab" id="weather-indicator">CLEAR</div>
-    </div>
 </div>
 
 <script>
-    /**
-     * GEOGRAPHY ENGINE DATA
-     */
-    const GEO_DB = [
-        { q: "Which country has the most time zones?", a: "France", o: ["USA", "Russia", "France", "China"], lat: 200, lng: 300 },
-        { q: "What is the largest country by area in Africa?", a: "Algeria", o: ["Nigeria", "Algeria", "Sudan", "Congo"], lat: 400, lng: 500 },
-        { q: "Mount Vesuvius overlooks which modern city?", a: "Naples", o: ["Rome", "Naples", "Florence", "Palermo"], lat: 150, lng: 450 },
-        { q: "Which desert covers much of Mongolia?", a: "Gobi", o: ["Sahara", "Gobi", "Thar", "Atacama"], lat: 300, lng: 700 },
-        { q: "What is the world's northernmost capital city?", a: "Reykjavik", o: ["Oslo", "Reykjavik", "Helsinki", "Ottawa"], lat: 50, lng: 200 },
-        { q: "In which ocean is the island of Madagascar?", a: "Indian Ocean", o: ["Atlantic", "Pacific", "Indian Ocean", "Southern"], lat: 650, lng: 600 },
-        { q: "The Mekong River flows into which sea?", a: "South China Sea", o: ["Sea of Japan", "South China Sea", "Andaman Sea", "Red Sea"], lat: 500, lng: 800 },
-        { q: "Which South American country is landlocked?", a: "Bolivia", o: ["Chile", "Bolivia", "Peru", "Guyana"], lat: 700, lng: 350 }
-    ];
+/**
+ * GEO-POP TITANIUM ENGINE
+ * Wrapped in an object to prevent global namespace pollution
+ */
+const App = {
+    // --- SAFE STORAGE SYSTEM ---
+    storage: {
+        get: (key) => {
+            try { return JSON.parse(localStorage.getItem(key)); } 
+            catch(e) { console.warn("Storage read failed"); return null; }
+        },
+        set: (key, val) => {
+            try { localStorage.setItem(key, JSON.stringify(val)); } 
+            catch(e) { console.warn("Storage write failed"); }
+        }
+    },
 
-    /**
-     * GAME STATE ENGINE
-     */
-    const GameState = {
-        hp: 100, gold: 0, 
-        currentPos: { x: 50, y: 50 },
-        discovered: [],
-        inventory: [],
-        activeNode: null,
-        weather: 'CLEAR'
-    };
+    // --- GAME STATE ---
+    state: {
+        cash: 0,
+        income: 0,
+        streak: 0,
+        upgrades: { bot: 0, drone: 0, satellite: 0 },
+        lastSave: Date.now()
+    },
 
-    /**
-     * INITIALIZATION
-     */
-    function init() {
-        const grid = document.getElementById('world-grid');
-        GEO_DB.forEach((node, index) => {
-            const div = document.createElement('div');
-            div.className = 'node';
-            div.style.left = node.lng + 'px';
-            div.style.top = node.lat + 'px';
-            div.innerHTML = '📍';
-            div.onclick = () => movePlayer(node, index);
-            grid.appendChild(div);
+    // --- CONSTANTS ---
+    items: [
+        { id: 'bot', name: 'Auto-Clicker', base: 100, inc: 1 },
+        { id: 'drone', name: 'Survey Drone', base: 1200, inc: 15 },
+        { id: 'satellite', name: 'Orbital Sat', base: 8000, inc: 90 }
+    ],
+    
+    questions: [
+        { q: "Capital of Japan?", a: "Tokyo", o: ["Kyoto", "Osaka", "Tokyo"] },
+        { q: "Largest Ocean?", a: "Pacific", o: ["Atlantic", "Pacific", "Indian"] },
+        { q: "Eiffel Tower city?", a: "Paris", o: ["London", "Paris", "Berlin"] },
+        { q: "Pyramids location?", a: "Egypt", o: ["Egypt", "Mexico", "Peru"] },
+        { q: "Smallest continent?", a: "Australia", o: ["Europe", "Australia", "Antarctica"] },
+        { q: "Longest river?", a: "Nile", o: ["Amazon", "Nile", "Yangtze"] }
+    ],
+
+    init: function() {
+        const saved = this.storage.get('geopop_titan');
+        if(saved) this.state = { ...this.state, ...saved }; // Merge safe defaults
+        
+        this.renderFidgets();
+        this.renderQuiz();
+        this.renderShop();
+        this.updateHUD();
+        this.startLoop();
+        this.checkButtons(); // Initial check for affordance
+    },
+
+    // --- CORE LOGIC ---
+    addCash: function(amount, x, y) {
+        this.state.cash += amount;
+        this.updateHUD();
+        this.checkButtons(); // Update shop buttons state
+        
+        if(x && y) {
+            const el = document.createElement('div');
+            el.className = 'float-text';
+            el.innerText = `+$${Math.floor(amount)}`;
+            el.style.left = `${x - 20}px`;
+            el.style.top = `${y - 40}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+    },
+
+    startLoop: function() {
+        // Income Loop
+        setInterval(() => {
+            if(this.state.income > 0) {
+                this.state.cash += (this.state.income / 10);
+                this.updateHUD();
+                this.checkButtons(); // Periodically check if we can afford stuff now
+            }
+        }, 100);
+
+        // Save Loop
+        setInterval(() => {
+            this.storage.set('geopop_titan', this.state);
+            const badge = document.getElementById('status-badge');
+            badge.innerText = "SAVED";
+            badge.style.color = "var(--success)";
+            setTimeout(() => { 
+                badge.innerText = "READY"; 
+                badge.style.color = "var(--text-mute)"; 
+            }, 1000);
+        }, 5000);
+    },
+
+    // --- UI UPDATERS ---
+    updateHUD: function() {
+        // Intl.NumberFormat for nice commas (1,000)
+        document.getElementById('ui-cash').innerText = Math.floor(this.state.cash).toLocaleString();
+        document.getElementById('ui-rate').innerText = this.state.income.toLocaleString();
+        document.getElementById('ui-streak').innerText = this.state.streak;
+    },
+
+    checkButtons: function() {
+        // Disables shop buttons if you don't have enough money
+        this.items.forEach(item => {
+            const btn = document.getElementById(`btn-${item.id}`);
+            if(!btn) return;
+            const count = this.state.upgrades[item.id];
+            const cost = Math.floor(item.base * Math.pow(1.15, count));
+            
+            if(this.state.cash < cost) {
+                btn.classList.add('cant-afford');
+            } else {
+                btn.classList.remove('cant-afford');
+            }
         });
-        updateHUD();
-        weatherCycle();
-    }
+    },
 
-    /**
-     * NAVIGATION ENGINE
-     */
-    function movePlayer(node, index) {
-        if(GameState.discovered.includes(index)) return;
-        
-        const token = document.getElementById('player-token');
-        token.style.left = (node.lng + 10) + 'px';
-        token.style.top = (node.lat + 10) + 'px';
-        
-        GameState.activeNode = { ...node, id: index };
-        setTimeout(() => startQuiz(node), 400);
-    }
+    nav: function(screenId, btnEl) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        document.querySelectorAll('.nav-icon').forEach(n => n.classList.remove('active'));
+        btnEl.classList.add('active');
+    },
 
-    /**
-     * QUIZ CONTROLLER
-     */
-    function startQuiz(data) {
-        const overlay = document.getElementById('quiz-overlay');
-        const content = document.getElementById('quiz-content');
-        overlay.style.display = 'flex';
+    // --- FEATURE: FIDGETS ---
+    renderFidgets: function() {
+        const grid = document.getElementById('fidget-container');
+        grid.innerHTML = '';
+        for(let i=0; i<9; i++) {
+            const b = document.createElement('button');
+            b.className = 'neu-btn pop-btn';
+            b.innerHTML = '●'; // Dot symbol
+            b.onclick = (e) => {
+                // Safety check for undefined event
+                const cx = e ? e.clientX : null;
+                const cy = e ? e.clientY : null;
+                
+                b.classList.add('popped');
+                if(navigator.vibrate) navigator.vibrate(5);
+                
+                // Reward scaling
+                this.addCash(1 + (this.state.income * 0.05), cx, cy);
+                
+                setTimeout(() => b.classList.remove('popped'), 200);
+            };
+            grid.appendChild(b);
+        }
+    },
+
+    isSpinning: false,
+    spin: function() {
+        if(this.isSpinning) return;
+        this.isSpinning = true;
         
-        let shuffled = [...data.o].sort(() => Math.random() - 0.5);
+        const wheel = document.getElementById('spinner-wheel');
+        const deg = 1080 + Math.random() * 360; // At least 3 full spins
         
-        content.innerHTML = `
-            <div style="font-size:12px; color:var(--neon-info); margin-bottom:10px;">ENCOUNTER: ${GameState.weather} CONDITIONS</div>
-            <h2 style="font-family:'Orbitron'; line-height:1.4;">${data.q}</h2>
-            <div class="choice-container">
-                ${shuffled.map(o => `<button class="choice-btn" onclick="handleChoice('${o}')">${o}</button>`).join('')}
+        wheel.style.transition = 'transform 3s cubic-bezier(0.25, 1, 0.5, 1)';
+        wheel.style.transform = `rotate(${deg}deg)`;
+        
+        setTimeout(() => {
+            const reward = 100 + (this.state.income * 20);
+            alert(`🎰 JACKPOT! You won $${reward.toLocaleString()}`);
+            this.addCash(reward);
+            
+            // Reset logic
+            wheel.style.transition = 'none';
+            wheel.style.transform = 'rotate(0deg)';
+            this.isSpinning = false;
+        }, 3100);
+    },
+
+    // --- FEATURE: QUIZ ---
+    renderQuiz: function() {
+        const q = this.questions[Math.floor(Math.random() * this.questions.length)];
+        const box = document.getElementById('quiz-inject');
+        
+        box.innerHTML = `
+            <h2 style="margin:0; color:var(--text-main); font-size:1.2rem;">${q.q}</h2>
+            <div id="quiz-opts">
+                ${q.o.map(opt => `<button class="neu-btn quiz-opt" onclick="App.checkAns(this, '${opt}', '${q.a}')">${opt}</button>`).join('')}
             </div>
         `;
+    },
 
-        if(GameState.weather === 'STORM') {
-            content.style.filter = 'blur(4px)';
-            setTimeout(() => content.style.filter = 'blur(0)', 1000);
-        }
-    }
+    checkAns: function(btn, choice, correct) {
+        // Prevent double clicking
+        const parent = document.getElementById('quiz-opts');
+        Array.from(parent.children).forEach(b => b.disabled = true);
 
-    function handleChoice(val) {
-        const correct = val === GameState.activeNode.a;
-        if(correct) {
-            GameState.gold += 1500;
-            GameState.discovered.push(GameState.activeNode.id);
-            alert("✅ RELIC SECURED (+1500G)");
+        if(choice === correct) {
+            btn.classList.add('correct');
+            this.state.streak++;
+            const reward = 50 + (this.state.streak * 10) + (this.state.income * 5);
+            this.addCash(reward);
         } else {
-            GameState.hp -= 20;
-            alert("❌ INTEGRITY BREACHED (-20%)");
+            btn.classList.add('wrong');
+            this.state.streak = 0;
+            if(navigator.vibrate) navigator.vibrate([50, 50]);
         }
         
-        updateHUD();
-        closeScreens();
-        
-        if(GameState.hp <= 0) {
-            alert("CRITICAL FAILURE: Memory Wipe Initialized.");
-            location.reload();
+        this.updateHUD();
+        setTimeout(() => this.renderQuiz(), 1200);
+    },
+
+    // --- FEATURE: SHOP ---
+    renderShop: function() {
+        const container = document.getElementById('shop-inject');
+        container.innerHTML = this.items.map(item => {
+            const count = this.state.upgrades[item.id];
+            const cost = Math.floor(item.base * Math.pow(1.15, count));
+            return `
+                <div class="shop-row">
+                    <div>
+                        <div style="font-weight:800; color:var(--text-main)">${item.name}</div>
+                        <div style="font-size:0.75rem; color:var(--text-mute)">Lvl ${count} | +$${item.inc}/s</div>
+                    </div>
+                    <button id="btn-${item.id}" class="neu-btn shop-btn" onclick="App.buy('${item.id}', ${item.inc})">
+                        $${cost.toLocaleString()}
+                    </button>
+                </div>
+            `;
+        }).join('');
+    },
+
+    buy: function(id, inc) {
+        const item = this.items.find(i => i.id === id);
+        const count = this.state.upgrades[id];
+        const cost = Math.floor(item.base * Math.pow(1.15, count));
+
+        if(this.state.cash >= cost) {
+            this.state.cash -= cost;
+            this.state.income += inc;
+            this.state.upgrades[id]++;
+            
+            // Re-render to update costs
+            this.renderShop();
+            this.updateHUD();
+            this.checkButtons();
+            
+            // Haptic feedback
+            if(navigator.vibrate) navigator.vibrate(10);
         }
     }
+};
 
-    /**
-     * FIDGET LOGIC
-     */
-    function fidgetClick(amt) {
-        GameState.gold += 10;
-        updateHUD();
-        // Shake animation
-        const s = document.querySelector('.fidget-spinner-ui');
-        s.style.borderColor = "var(--neon-danger)";
-        setTimeout(() => s.style.borderColor = "var(--neon-primary)", 100);
-    }
-
-    function fidgetToggle() {
-        const t = document.getElementById('f-toggle');
-        t.classList.toggle('on');
-        GameState.gold += 50;
-        updateHUD();
-    }
-
-    /**
-     * WEATHER ENGINE
-     */
-    function weatherCycle() {
-        const layer = document.getElementById('weather-layer');
-        const ind = document.getElementById('weather-indicator');
-        const r = Math.random();
-        
-        if(r > 0.7) {
-            GameState.weather = 'STORM';
-            layer.style.opacity = '1';
-            layer.classList.add('storm');
-            ind.style.color = 'var(--neon-danger)';
-            ind.innerText = 'STORM';
-        } else {
-            GameState.weather = 'CLEAR';
-            layer.style.opacity = '0';
-            ind.style.color = '#444';
-            ind.innerText = 'CLEAR';
-        }
-        setTimeout(weatherCycle, 10000);
-    }
-
-    /**
-     * UI HELPERS
-     */
-    function updateHUD() {
-        document.getElementById('hp-val').innerText = GameState.hp + "%";
-        document.getElementById('hp-bar').style.width = GameState.hp + "%";
-        document.getElementById('gold-val').innerText = GameState.gold.toLocaleString();
-    }
-
-    function openScreen(id) {
-        document.querySelectorAll('.ui-screen').forEach(s => s.style.display = 'none');
-        document.getElementById(id).style.display = 'flex';
-    }
-
-    function closeScreens() {
-        document.querySelectorAll('.ui-screen').forEach(s => s.style.display = 'none');
-    }
-
-    function buy(item, price) {
-        if(GameState.gold >= price) {
-            GameState.gold -= price;
-            GameState.inventory.push(item);
-            updateHUD();
-            alert("Acquired: " + item);
-        } else {
-            alert("Insufficient Credits.");
-        }
-    }
-
-    // Initialize Game
-    init();
+// Start the engine
+App.init();
 
 </script>
 </body>
