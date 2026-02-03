@@ -3,152 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoQuest: The Ultimate Map Challenge</title>
+    <title>GeoQuest: The Full Expedition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --dark: #1e293b;
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
+            --correct: #22c55e; --wrong: #ef4444; --text: #f8fafc;
         }
-        body { font-family: 'Press Start 2P', cursive, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
-        /* Simple fallback font if Press Start 2P isn't loaded */
-        body { font-family: 'Segoe UI', Arial, sans-serif; }
-
-        .game-container { background: #1e293b; width: 90%; max-width: 600px; padding: 30px; border-radius: 20px; border: 4px solid #334155; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
         
-        /* Stats Bar */
-        .stats-bar { display: flex; justify-content: space-between; margin-bottom: 20px; background: #0f172a; padding: 10px; border-radius: 10px; font-size: 0.9rem; border: 2px solid var(--primary); }
-        .progress-container { width: 100%; height: 10px; background: #334155; border-radius: 5px; margin-bottom: 20px; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
-
-        /* Slide Logic */
-        .slide { display: none; text-align: center; animation: fadeIn 0.5s; }
-        .slide.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .question-text { font-size: 1.4rem; margin-bottom: 25px; min-height: 80px; }
+        #game-wrapper { width: 95%; max-width: 550px; position: relative; }
         
-        .options-grid { display: grid; gap: 15px; }
-        .opt-btn { background: #334155; border: 2px solid #475569; color: white; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
-        .opt-btn:hover { background: #475569; transform: scale(1.02); }
-        .opt-btn.correct { background: var(--success) !important; border-color: #f0fff4; transform: scale(1.05); }
-        .opt-btn.wrong { background: var(--danger) !important; border-color: #fff5f5; opacity: 0.7; }
+        /* HUD (Heads Up Display) */
+        .hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-family: 'Bungee', cursive; color: var(--accent); }
+        .hp-bar { color: #ff4757; font-size: 1.2rem; }
 
-        #feedback-msg { height: 30px; margin-top: 15px; font-weight: bold; font-size: 1.2rem; }
-        .victory-screen { text-align: center; }
-        .rank-tag { font-size: 2rem; color: #fbbf24; margin: 20px 0; display: block; }
+        .progress-container { width: 100%; height: 8px; background: #334155; border-radius: 10px; margin-bottom: 20px; }
+        #bar { height: 100%; width: 0%; background: var(--accent); border-radius: 10px; transition: 0.4s; box-shadow: 0 0 15px var(--accent); }
+
+        /* Slide Styles */
+        .slide { background: var(--card); border-radius: 24px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 2px solid #334155; position: relative; transition: all 0.5s ease-in-out; }
+        .slide.slide-out { transform: translateX(-150%) rotate(-10deg); opacity: 0; }
+
+        .category { text-transform: uppercase; font-weight: 800; color: var(--accent); font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 10px; display: block; }
+        h2 { font-size: 1.3rem; margin: 0 0 20px 0; line-height: 1.5; min-height: 60px; }
+
+        .options-list { display: grid; gap: 10px; }
+        .opt { background: #334155; border: 2px solid transparent; color: white; padding: 14px; border-radius: 12px; cursor: pointer; text-align: left; font-size: 1rem; transition: 0.2s; }
+        .opt:hover:not(:disabled) { background: #475569; border-color: var(--accent); }
+        .opt.correct { background: var(--correct) !important; font-weight: bold; }
+        .opt.wrong { background: var(--wrong) !important; opacity: 0.7; }
+
+        /* Explanation Box */
+        #explanation-box { margin-top: 20px; padding: 15px; background: rgba(56, 189, 248, 0.1); border-radius: 12px; border: 1px solid var(--accent); display: none; }
+        #explanation-box p { margin: 5px 0 0 0; font-size: 0.9rem; line-height: 1.4; color: #cbd5e1; }
+
+        .controls { margin-top: 20px; }
+        #next-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; padding: 16px; border-radius: 12px; font-family: 'Bungee'; cursor: pointer; display: none; font-size: 1rem; }
+        
+        .shake { animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     </style>
 </head>
 <body>
 
-<div class="game-container">
-    <div class="stats-bar">
-        <span>LVL: <span id="lvl">1</span></span>
-        <span>XP: <span id="xp">0</span></span>
-        <span>HP: <span id="hp">❤️❤️❤️</span></span>
+<div id="game-wrapper">
+    <div class="hud">
+        <div id="score-display">XP: 0</div>
+        <div class="hp-bar" id="hp-display">❤️❤️❤️</div>
     </div>
-    <div class="progress-container"><div id="progress-bar"></div></div>
+    <div class="progress-container"><div id="bar"></div></div>
 
-    <div id="game-box">
+    <div id="current-slide" class="slide">
         </div>
 
-    <div id="feedback-msg"></div>
+    <div id="explanation-box">
+        <strong style="color: var(--accent); font-size: 0.8rem;">💡 KNOWLEDGE GAINED:</strong>
+        <p id="fact-text"></p>
+    </div>
+
+    <div class="controls">
+        <button id="next-btn" onclick="moveToNext()">NEXT CHALLENGE →</button>
+    </div>
 </div>
 
 <script>
-    const quizData = [
-        { q: "Where does the world’s largest population of lions live?", a: "The Serengeti", options: ["The Serengeti", "Kruger Park", "Maasai Mara", "The Sahara"] },
-        { q: "Which is the largest city in the United Arab Emirates?", a: "Dubai", options: ["Abu Dhabi", "Dubai", "Sharjah", "Muscat"] },
-        { q: "The Gobi Desert stretches across northern China and...", a: "Mongolia", options: ["Kazakhstan", "Mongolia", "Russia", "India"] },
-        { q: "What is the capital of Ethiopia?", a: "Addis Ababa", options: ["Nairobi", "Addis Ababa", "Accra", "Lagos"] },
-        { q: "Sumatra is the largest island belonging entirely to which nation?", a: "Indonesia", options: ["Philippines", "Malaysia", "Indonesia", "Japan"] },
-        { q: "What was Mumbai's former name?", a: "Bombay", options: ["Madras", "Calcutta", "Bombay", "Ceylon"] },
-        { q: "Which country hosts the 'Running of the Bulls' in Pamplona?", a: "Spain", options: ["Portugal", "Mexico", "Spain", "Italy"] },
-        { q: "Which city is the capital of Ukraine?", a: "Kyiv", options: ["Lviv", "Kyiv", "Odessa", "Crimea"] },
-        { q: "The Nobel Peace Prize is specifically awarded in which city?", a: "Oslo", options: ["Stockholm", "Oslo", "Geneva", "Copenhagen"] },
-        { q: "Which river is the longest in the United States?", a: "Missouri River", options: ["Mississippi", "Missouri River", "Colorado", "Rio Grande"] },
-        { q: "The CN Tower is a major attraction in which Canadian province?", a: "Ontario", options: ["Quebec", "Ontario", "Alberta", "BC"] },
-        { q: "What is the primary river of Venezuela?", a: "Orinoco", options: ["Amazon", "Orinoco", "Magdalena", "Plata"] },
-        { q: "Asunción is the capital of which country?", a: "Paraguay", options: ["Uruguay", "Paraguay", "Bolivia", "Chile"] },
-        { q: "Which city recorded the hottest temperature on Earth?", a: "Furnace Creek", options: ["Death Valley (Furnace Creek)", "Sahara", "Lut Desert", "Dubai"] }
+    const fullFactList = [
+        { cat: "Africa", q: "Where is the world’s largest population of lions found?", a: "The Serengeti", alt: ["Kruger Park", "Sahara Desert", "Okavango Delta"], e: "The Serengeti (Tanzania) is famous for its grassland and the massive wildebeest migration." },
+        { cat: "Africa", q: "What is the capital city of Ethiopia?", a: "Addis Ababa", alt: ["Nairobi", "Asmara", "Lagos"], e: "Addis Ababa is the major political and commercial hub of Ethiopia." },
+        { cat: "Asia", q: "Which city holds the title of the largest in the UAE?", a: "Dubai", alt: ["Abu Dhabi", "Sharjah", "Doha"], e: "Dubai is the most populous city in the United Arab Emirates." },
+        { cat: "Asia", q: "Where do the Tigris and Euphrates rivers meet?", a: "Southern Iraq", alt: ["Northern Syria", "Western Iran", "Turkey"], e: "The confluence of these two historic rivers happens in southern Iraq." },
+        { cat: "Asia", q: "The Gobi Desert stretches across northern China and which other nation?", a: "Mongolia", alt: ["Kazakhstan", "Russia", "Vietnam"], e: "The Gobi covers parts of both northern China and southern Mongolia." },
+        { cat: "Asia", q: "What is the primary language spoken by people in Hong Kong?", a: "Cantonese", alt: ["Mandarin", "Hakka", "Vietnamese"], e: "Cantonese is a language originating from southern China." },
+        { cat: "Asia", q: "Which two major cities are located in Turkey?", a: "Ankara and Istanbul", alt: ["Ankara and Cairo", "Istanbul and Tehran", "Bursa and Baghdad"], e: "Ankara is the capital, while Istanbul is the largest city in Turkey." },
+        { cat: "Asia", q: "Which Indonesian island is the largest by area that belongs entirely to Indonesia?", a: "Sumatra", alt: ["Java", "Borneo", "Bali"], e: "While Borneo is larger, it is shared with other countries; Sumatra belongs entirely to Indonesia." },
+        { cat: "Asia", q: "Which city features a snow leopard on its coat of arms?", a: "Almaty", alt: ["Astana", "Tashkent", "Baku"], e: "Almaty is one of the largest cities in Kazakhstan." },
+        { cat: "Asia", q: "What was the former name of the Indian port city Mumbai?", a: "Bombay", alt: ["Madras", "Calcutta", "Bangalore"], e: "Mumbai was officially known as Bombay until 1995." },
+        { cat: "Oceania", q: "What is the capital of the Polynesian country Samoa?", a: "Apia", alt: ["Suva", "Nadi", "Honiara"], e: "Apia is the central hub and capital of Samoa." },
+        { cat: "Oceania", q: "What are the two largest cities in Australia?", a: "Sydney and Melbourne", alt: ["Sydney and Brisbane", "Perth and Melbourne", "Adelaide and Sydney"], e: "These two cities are the primary urban centers of Australia." },
+        { cat: "Europe", q: "Which is the largest Western European country that is not in the EU?", a: "Switzerland", alt: ["Norway", "United Kingdom", "Iceland"], e: "Switzerland maintains a policy of neutrality and is not a member of the European Union." },
+        { cat: "Europe", q: "In which city does the running of the bulls take place?", a: "Pamplona", alt: ["Madrid", "Barcelona", "Seville"], e: "Pamplona is located in northern Spain." },
+        { cat: "Europe", q: "Which capital city is famous for its large number of canals?", a: "Amsterdam", alt: ["Venice", "Copenhagen", "Berlin"], e: "Amsterdam, the capital of the Netherlands, is built on an intricate canal system." },
+        { cat: "Europe", q: "Kyiv is the capital of which country?", a: "Ukraine", alt: ["Poland", "Russia", "Belarus"], e: "Kyiv is the capital of Ukraine, which sits on the Crimean Peninsula." },
+        { cat: "Europe", q: "Where is the Nobel Peace Prize specifically awarded?", a: "Oslo, Norway", alt: ["Stockholm, Sweden", "Geneva, Switzerland", "Paris, France"], e: "Most Nobel prizes are given in Stockholm, but the Peace Prize is awarded in Oslo." },
+        { cat: "Europe", q: "Which English city was a major hub of the Industrial Revolution?", a: "Manchester", alt: ["London", "Liverpool", "Birmingham"], e: "Manchester is the third-largest city in England." },
+        { cat: "North America", q: "Where was the hottest temperature on Earth recorded?", a: "Furnace Creek, Death Valley", alt: ["Sahara Desert", "Lut Desert", "Mojave Desert"], e: "Furnace Creek is located in the Mojave Desert's Death Valley." },
+        { cat: "North America", q: "In which state does the Denali Star rail service operate?", a: "Alaska", alt: ["Colorado", "Washington", "Oregon"], e: "The Denali Star is a famous scenic rail service in Alaska." },
+        { cat: "North America", q: "Portland, Oregon is located near the mouth of which river?", a: "Willamette River", alt: ["Columbia River", "Snake River", "Missouri River"], e: "The Willamette runs through the heart of Portland." },
+        { cat: "North America", q: "Which dam creates Lake Mead, the largest U.S. reservoir?", a: "Hoover Dam", alt: ["Grand Coulee Dam", "Glen Canyon Dam", "Fort Peck Dam"], e: "The Hoover Dam is built on the Colorado River." },
+        { cat: "North America", q: "What is the longest river in the United States?", a: "Missouri River", alt: ["Mississippi River", "Colorado River", "Rio Grande"], e: "The Missouri is technically longer than the Mississippi." },
+        { cat: "North America", q: "In which province is the CN Tower located?", a: "Ontario", alt: ["Quebec", "British Columbia", "Alberta"], e: "Ontario is the largest Canadian province by population." },
+        { cat: "Latin America", q: "What is the primary river of Venezuela?", a: "Orinoco", alt: ["Amazon", "Parana", "Magdalena"], e: "The Orinoco is one of the longest rivers in South America." },
+        { cat: "South America", q: "What is the longest continental mountain range in the world?", a: "The Andes", alt: ["The Rockies", "The Himalayas", "The Alps"], e: "The Andes run along the entire western coast of South America." },
+        { cat: "Caribbean", q: "What is the capital of Barbados?", a: "Bridgetown", alt: ["Kingston", "Nassau", "Port of Spain"], e: "Bridgetown is located in the Atlantic near the Caribbean Sea." },
+        { cat: "South America", q: "Which country is bordered by Brazil, Argentina, and Bolivia?", a: "Paraguay", alt: ["Uruguay", "Chile", "Peru"], e: "Asunción is the capital of landlocked Paraguay." }
     ];
 
     let currentIdx = 0;
     let xp = 0;
-    let lvl = 1;
-    let lives = 3;
+    let hp = 3;
 
-    const gameBox = document.getElementById('game-box');
-    const feedback = document.getElementById('feedback-msg');
-    const xpDisplay = document.getElementById('xp');
-    const lvlDisplay = document.getElementById('lvl');
-    const hpDisplay = document.getElementById('hp');
-    const progressBar = document.getElementById('progress-bar');
+    function init() {
+        renderSlide();
+    }
 
-    function loadSlide() {
-        if (currentIdx >= quizData.length) {
-            showVictory();
+    function renderSlide() {
+        if (currentIdx >= fullFactList.length) {
+            showWin();
             return;
         }
 
-        const data = quizData[currentIdx];
-        feedback.innerHTML = "";
-        progressBar.style.width = `${(currentIdx / quizData.length) * 100}%`;
+        const data = fullFactList[currentIdx];
+        const slide = document.getElementById('current-slide');
+        const nextBtn = document.getElementById('next-btn');
+        const expBox = document.getElementById('explanation-box');
 
-        gameBox.innerHTML = `
-            <div class="slide active">
-                <div class="question-text">${data.q}</div>
-                <div class="options-grid">
-                    ${data.options.map(opt => `<button class="opt-btn" onclick="checkAnswer(this, '${opt}')">${opt}</button>`).join('')}
-                </div>
+        nextBtn.style.display = "none";
+        expBox.style.display = "none";
+        document.getElementById('bar').style.width = `${(currentIdx / fullFactList.length) * 100}%`;
+
+        // Mix correct answer with alternatives
+        let choices = [data.a, ...data.alt].sort(() => Math.random() - 0.5);
+
+        slide.innerHTML = `
+            <span class="category">${data.cat}</span>
+            <h2>${data.q}</h2>
+            <div class="options-list">
+                ${choices.map(c => `<button class="opt" onclick="handleSelect(this, '${c}')">${c}</button>`).join('')}
             </div>
         `;
     }
 
-    function checkAnswer(btn, choice) {
-        const correct = quizData[currentIdx].a;
-        const buttons = document.querySelectorAll('.opt-btn');
-        buttons.forEach(b => b.disabled = true); // Prevent double clicking
+    function handleSelect(btn, choice) {
+        const data = fullFactList[currentIdx];
+        const allButtons = document.querySelectorAll('.opt');
+        allButtons.forEach(b => b.disabled = true);
 
-        if (choice === correct) {
+        if (choice === data.a) {
             btn.classList.add('correct');
-            feedback.innerHTML = "<span style='color:var(--success)'>+100 XP! CRITICAL HIT!</span>";
-            xp += 100;
-            if (xp % 300 === 0) {
-                lvl++;
-                lvlDisplay.innerText = lvl;
-                feedback.innerHTML = "<span style='color:var(--primary)'>LEVEL UP!</span>";
-            }
+            xp += 150;
+            document.getElementById('score-display').innerText = `XP: ${xp}`;
         } else {
             btn.classList.add('wrong');
-            feedback.innerHTML = `<span style='color:var(--danger)'>MISS! Correct: ${correct}</span>`;
-            lives--;
-            hpDisplay.innerText = "❤️".repeat(Math.max(0, lives));
+            hp--;
+            document.getElementById('hp-display').innerText = "❤️".repeat(Math.max(0, hp)) + "🖤".repeat(3 - hp);
+            document.getElementById('current-slide').classList.add('shake');
+            setTimeout(() => document.getElementById('current-slide').classList.remove('shake'), 300);
+            
+            // Show correct one
+            allButtons.forEach(b => { if(b.innerText === data.a) b.classList.add('correct'); });
+
+            if (hp <= 0) {
+                setTimeout(showGameOver, 1000);
+                return;
+            }
         }
 
-        xpDisplay.innerText = xp;
+        document.getElementById('fact-text').innerText = data.e;
+        document.getElementById('explanation-box').style.display = "block";
+        document.getElementById('next-btn').style.display = "block";
+    }
+
+    function moveToNext() {
+        const slide = document.getElementById('current-slide');
+        slide.classList.add('slide-out');
         
         setTimeout(() => {
             currentIdx++;
-            loadSlide();
-        }, 1500);
+            slide.classList.remove('slide-out');
+            renderSlide();
+        }, 400);
     }
 
-    function showVictory() {
-        progressBar.style.width = "100%";
-        let rank = xp > 1000 ? "GEOGRAPHY ARCHMAGE" : "WANDERER";
-        gameBox.innerHTML = `
-            <div class="victory-screen">
-                <h2>QUEST COMPLETE!</h2>
+    function showWin() {
+        document.getElementById('game-wrapper').innerHTML = `
+            <div class="slide">
+                <h1 style="font-family:'Bungee'; color:var(--correct)">EXPEDITION COMPLETE!</h1>
+                <p>You mastered all ${fullFactList.length} geography facts.</p>
                 <p>Final XP: ${xp}</p>
-                <span class="rank-tag">${rank}</span>
-                <button class="opt-btn" onclick="location.reload()">RESTART QUEST</button>
+                <button id="next-btn" style="display:block" onclick="location.reload()">NEW GAME</button>
             </div>
         `;
     }
 
-    loadSlide();
+    function showGameOver() {
+        document.getElementById('game-wrapper').innerHTML = `
+            <div class="slide" style="border-color: var(--wrong)">
+                <h1 style="font-family:'Bungee'; color:var(--wrong)">EXPEDITION FAILED</h1>
+                <p>You ran out of health. Review your notes and try again!</p>
+                <button id="next-btn" style="display:block" onclick="location.reload()">RETRY QUEST</button>
+            </div>
+        `;
+    }
+
+    init();
 </script>
 
 </body>
