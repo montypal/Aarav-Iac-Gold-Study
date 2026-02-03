@@ -3,200 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoQuest: The Full Expedition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <title>GeoQuest: The Legend of the 7 Continents</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
-            --correct: #22c55e; --wrong: #ef4444; --text: #f8fafc;
+            --primary: #4f46e5; --success: #10b981; --danger: #ef4444;
+            --gold: #fbbf24; --bg: #020617; --card: #1e293b;
         }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; background-color: var(--bg); color: white;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden;
+        }
         
-        #game-wrapper { width: 95%; max-width: 550px; position: relative; }
-        
-        /* HUD (Heads Up Display) */
-        .hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-family: 'Bungee', cursive; color: var(--accent); }
-        .hp-bar { color: #ff4757; font-size: 1.2rem; }
+        /* Game Map/World */
+        #game-world {
+            width: 100%; max-width: 600px; height: 90vh; background: #0f172a;
+            border: 4px solid #334155; border-radius: 20px; position: relative;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
 
-        .progress-container { width: 100%; height: 8px; background: #334155; border-radius: 10px; margin-bottom: 20px; }
-        #bar { height: 100%; width: 0%; background: var(--accent); border-radius: 10px; transition: 0.4s; box-shadow: 0 0 15px var(--accent); }
+        /* Top HUD */
+        .hud {
+            padding: 20px; background: rgba(0,0,0,0.5); font-family: 'Press Start 2P', cursive;
+            font-size: 8px; display: flex; justify-content: space-between; border-bottom: 2px solid #334155;
+        }
+        .stat-val { color: var(--gold); font-size: 10px; }
 
-        /* Slide Styles */
-        .slide { background: var(--card); border-radius: 24px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 2px solid #334155; position: relative; transition: all 0.5s ease-in-out; }
-        .slide.slide-out { transform: translateX(-150%) rotate(-10deg); opacity: 0; }
+        /* Progress Path */
+        .map-path {
+            height: 60px; background: #1e293b; display: flex; align-items: center; padding: 0 20px;
+            position: relative; border-bottom: 1px solid #334155;
+        }
+        #player-sprite {
+            font-size: 24px; position: absolute; left: 0%; transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
 
-        .category { text-transform: uppercase; font-weight: 800; color: var(--accent); font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 10px; display: block; }
-        h2 { font-size: 1.3rem; margin: 0 0 20px 0; line-height: 1.5; min-height: 60px; }
+        /* Card Slide System */
+        #card-container {
+            flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 20px;
+            perspective: 1000px;
+        }
+        .card {
+            background: var(--card); width: 100%; padding: 25px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-bottom: 5px solid #000;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+        .card.exit { transform: translateX(-120%) rotate(-10deg); opacity: 0; }
+        .card.enter { transform: scale(0.8); opacity: 0; }
 
-        .options-list { display: grid; gap: 10px; }
-        .opt { background: #334155; border: 2px solid transparent; color: white; padding: 14px; border-radius: 12px; cursor: pointer; text-align: left; font-size: 1rem; transition: 0.2s; }
-        .opt:hover:not(:disabled) { background: #475569; border-color: var(--accent); }
-        .opt.correct { background: var(--correct) !important; font-weight: bold; }
-        .opt.wrong { background: var(--wrong) !important; opacity: 0.7; }
+        .category-tag {
+            display: inline-block; background: var(--primary); padding: 5px 10px;
+            border-radius: 5px; font-size: 10px; font-family: 'Press Start 2P'; margin-bottom: 15px;
+        }
 
-        /* Explanation Box */
-        #explanation-box { margin-top: 20px; padding: 15px; background: rgba(56, 189, 248, 0.1); border-radius: 12px; border: 1px solid var(--accent); display: none; }
-        #explanation-box p { margin: 5px 0 0 0; font-size: 0.9rem; line-height: 1.4; color: #cbd5e1; }
+        h2 { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.4; font-weight: 900; }
 
-        .controls { margin-top: 20px; }
-        #next-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; padding: 16px; border-radius: 12px; font-family: 'Bungee'; cursor: pointer; display: none; font-size: 1rem; }
-        
-        .shake { animation: shake 0.3s; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        .options-grid { display: grid; gap: 12px; }
+        .btn-opt {
+            background: #334155; border: 2px solid transparent; color: white; padding: 15px;
+            border-radius: 10px; cursor: pointer; text-align: left; font-weight: bold; font-size: 1rem;
+            transition: 0.2s;
+        }
+        .btn-opt:hover { background: #475569; transform: translateY(-2px); }
+        .btn-opt.correct { background: var(--success) !important; animation: bounce 0.4s; }
+        .btn-opt.wrong { background: var(--danger) !important; }
+
+        /* Quest Log (Explanations) */
+        #quest-log {
+            position: absolute; bottom: 0; left: 0; width: 100%; background: #000;
+            border-top: 3px solid var(--gold); padding: 20px; display: none; z-index: 10;
+        }
+        #quest-log h3 { font-family: 'Press Start 2P'; font-size: 10px; color: var(--gold); margin-top: 0; }
+        #quest-log p { font-size: 0.9rem; margin-bottom: 15px; color: #cbd5e1; }
+        .next-btn {
+            background: var(--gold); color: black; border: none; padding: 10px 20px;
+            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; width: 100%;
+        }
+
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(10px); } 50% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
     </style>
 </head>
 <body>
 
-<div id="game-wrapper">
+<div id="game-world">
     <div class="hud">
-        <div id="score-display">XP: 0</div>
-        <div class="hp-bar" id="hp-display">❤️❤️❤️</div>
+        <div>HP: <span id="hp" class="stat-val">❤❤❤</span></div>
+        <div>GOLD: <span id="gold" class="stat-val">0</span></div>
+        <div>STREAK: <span id="streak" class="stat-val">0</span></div>
     </div>
-    <div class="progress-container"><div id="bar"></div></div>
 
-    <div id="current-slide" class="slide">
+    <div class="map-path">
+        <div id="player-sprite">🌍</div>
+        <div style="position:absolute; right: 20px;">🏁</div>
+    </div>
+
+    <div id="card-container">
         </div>
 
-    <div id="explanation-box">
-        <strong style="color: var(--accent); font-size: 0.8rem;">💡 KNOWLEDGE GAINED:</strong>
-        <p id="fact-text"></p>
-    </div>
-
-    <div class="controls">
-        <button id="next-btn" onclick="moveToNext()">NEXT CHALLENGE →</button>
+    <div id="quest-log">
+        <h3>QUEST LOG UPDATED</h3>
+        <p id="log-text"></p>
+        <button class="next-btn" onclick="nextSlide()">CONTINUE EXPEDITION</button>
     </div>
 </div>
 
 <script>
-    const fullFactList = [
-        { cat: "Africa", q: "Where is the world’s largest population of lions found?", a: "The Serengeti", alt: ["Kruger Park", "Sahara Desert", "Okavango Delta"], e: "The Serengeti (Tanzania) is famous for its grassland and the massive wildebeest migration." },
-        { cat: "Africa", q: "What is the capital city of Ethiopia?", a: "Addis Ababa", alt: ["Nairobi", "Asmara", "Lagos"], e: "Addis Ababa is the major political and commercial hub of Ethiopia." },
-        { cat: "Asia", q: "Which city holds the title of the largest in the UAE?", a: "Dubai", alt: ["Abu Dhabi", "Sharjah", "Doha"], e: "Dubai is the most populous city in the United Arab Emirates." },
-        { cat: "Asia", q: "Where do the Tigris and Euphrates rivers meet?", a: "Southern Iraq", alt: ["Northern Syria", "Western Iran", "Turkey"], e: "The confluence of these two historic rivers happens in southern Iraq." },
-        { cat: "Asia", q: "The Gobi Desert stretches across northern China and which other nation?", a: "Mongolia", alt: ["Kazakhstan", "Russia", "Vietnam"], e: "The Gobi covers parts of both northern China and southern Mongolia." },
-        { cat: "Asia", q: "What is the primary language spoken by people in Hong Kong?", a: "Cantonese", alt: ["Mandarin", "Hakka", "Vietnamese"], e: "Cantonese is a language originating from southern China." },
-        { cat: "Asia", q: "Which two major cities are located in Turkey?", a: "Ankara and Istanbul", alt: ["Ankara and Cairo", "Istanbul and Tehran", "Bursa and Baghdad"], e: "Ankara is the capital, while Istanbul is the largest city in Turkey." },
-        { cat: "Asia", q: "Which Indonesian island is the largest by area that belongs entirely to Indonesia?", a: "Sumatra", alt: ["Java", "Borneo", "Bali"], e: "While Borneo is larger, it is shared with other countries; Sumatra belongs entirely to Indonesia." },
-        { cat: "Asia", q: "Which city features a snow leopard on its coat of arms?", a: "Almaty", alt: ["Astana", "Tashkent", "Baku"], e: "Almaty is one of the largest cities in Kazakhstan." },
-        { cat: "Asia", q: "What was the former name of the Indian port city Mumbai?", a: "Bombay", alt: ["Madras", "Calcutta", "Bangalore"], e: "Mumbai was officially known as Bombay until 1995." },
-        { cat: "Oceania", q: "What is the capital of the Polynesian country Samoa?", a: "Apia", alt: ["Suva", "Nadi", "Honiara"], e: "Apia is the central hub and capital of Samoa." },
-        { cat: "Oceania", q: "What are the two largest cities in Australia?", a: "Sydney and Melbourne", alt: ["Sydney and Brisbane", "Perth and Melbourne", "Adelaide and Sydney"], e: "These two cities are the primary urban centers of Australia." },
-        { cat: "Europe", q: "Which is the largest Western European country that is not in the EU?", a: "Switzerland", alt: ["Norway", "United Kingdom", "Iceland"], e: "Switzerland maintains a policy of neutrality and is not a member of the European Union." },
-        { cat: "Europe", q: "In which city does the running of the bulls take place?", a: "Pamplona", alt: ["Madrid", "Barcelona", "Seville"], e: "Pamplona is located in northern Spain." },
-        { cat: "Europe", q: "Which capital city is famous for its large number of canals?", a: "Amsterdam", alt: ["Venice", "Copenhagen", "Berlin"], e: "Amsterdam, the capital of the Netherlands, is built on an intricate canal system." },
-        { cat: "Europe", q: "Kyiv is the capital of which country?", a: "Ukraine", alt: ["Poland", "Russia", "Belarus"], e: "Kyiv is the capital of Ukraine, which sits on the Crimean Peninsula." },
-        { cat: "Europe", q: "Where is the Nobel Peace Prize specifically awarded?", a: "Oslo, Norway", alt: ["Stockholm, Sweden", "Geneva, Switzerland", "Paris, France"], e: "Most Nobel prizes are given in Stockholm, but the Peace Prize is awarded in Oslo." },
-        { cat: "Europe", q: "Which English city was a major hub of the Industrial Revolution?", a: "Manchester", alt: ["London", "Liverpool", "Birmingham"], e: "Manchester is the third-largest city in England." },
-        { cat: "North America", q: "Where was the hottest temperature on Earth recorded?", a: "Furnace Creek, Death Valley", alt: ["Sahara Desert", "Lut Desert", "Mojave Desert"], e: "Furnace Creek is located in the Mojave Desert's Death Valley." },
-        { cat: "North America", q: "In which state does the Denali Star rail service operate?", a: "Alaska", alt: ["Colorado", "Washington", "Oregon"], e: "The Denali Star is a famous scenic rail service in Alaska." },
-        { cat: "North America", q: "Portland, Oregon is located near the mouth of which river?", a: "Willamette River", alt: ["Columbia River", "Snake River", "Missouri River"], e: "The Willamette runs through the heart of Portland." },
-        { cat: "North America", q: "Which dam creates Lake Mead, the largest U.S. reservoir?", a: "Hoover Dam", alt: ["Grand Coulee Dam", "Glen Canyon Dam", "Fort Peck Dam"], e: "The Hoover Dam is built on the Colorado River." },
-        { cat: "North America", q: "What is the longest river in the United States?", a: "Missouri River", alt: ["Mississippi River", "Colorado River", "Rio Grande"], e: "The Missouri is technically longer than the Mississippi." },
-        { cat: "North America", q: "In which province is the CN Tower located?", a: "Ontario", alt: ["Quebec", "British Columbia", "Alberta"], e: "Ontario is the largest Canadian province by population." },
-        { cat: "Latin America", q: "What is the primary river of Venezuela?", a: "Orinoco", alt: ["Amazon", "Parana", "Magdalena"], e: "The Orinoco is one of the longest rivers in South America." },
-        { cat: "South America", q: "What is the longest continental mountain range in the world?", a: "The Andes", alt: ["The Rockies", "The Himalayas", "The Alps"], e: "The Andes run along the entire western coast of South America." },
-        { cat: "Caribbean", q: "What is the capital of Barbados?", a: "Bridgetown", alt: ["Kingston", "Nassau", "Port of Spain"], e: "Bridgetown is located in the Atlantic near the Caribbean Sea." },
-        { cat: "South America", q: "Which country is bordered by Brazil, Argentina, and Bolivia?", a: "Paraguay", alt: ["Uruguay", "Chile", "Peru"], e: "Asunción is the capital of landlocked Paraguay." }
+    const database = [
+        { c: "AFRICA", q: "Where does the world's largest lion population live?", a: "The Serengeti", o: ["The Serengeti", "Kruger", "Sahara", "Okavango"], x: "The Serengeti is a grassland in Tanzania famous for its wildebeest migration." },
+        { c: "AFRICA", q: "What is the capital of Ethiopia?", a: "Addis Ababa", o: ["Nairobi", "Addis Ababa", "Asmara", "Lagos"], x: "Addis Ababa serves as the political and commercial heart of Ethiopia." },
+        { c: "ASIA", q: "What is the largest city in the UAE?", a: "Dubai", o: ["Abu Dhabi", "Dubai", "Sharjah", "Doha"], x: "While Abu Dhabi is the capital, Dubai is the most populous city." },
+        { c: "ASIA", q: "Where do the Tigris and Euphrates meet?", a: "Southern Iraq", o: ["Turkey", "Syria", "Southern Iraq", "Iran"], x: "This historic confluence occurs in southern Iraq before reaching the Persian Gulf." },
+        { c: "ASIA", q: "The Gobi Desert stretches across China and...", a: "Mongolia", o: ["Mongolia", "Russia", "Kazakhstan", "India"], x: "The Gobi is a vast, cold desert spanning northern China and southern Mongolia." },
+        { c: "ASIA", q: "What do people in Hong Kong primarily speak?", a: "Cantonese", o: ["Mandarin", "Cantonese", "Hakka", "English"], x: "Cantonese is the prestige variety of Chinese spoken in the south." },
+        { c: "ASIA", q: "Ankara and Istanbul are located in which country?", a: "Turkey", o: ["Turkey", "Greece", "Egypt", "Jordan"], x: "Ankara is the capital, while Istanbul bridges Europe and Asia." },
+        { c: "ASIA", q: "What is Indonesia's largest island by area (entirely held)?", a: "Sumatra", o: ["Java", "Bali", "Sumatra", "Lombok"], x: "Sumatra is the largest island that belongs 100% to Indonesia." },
+        { c: "ASIA", q: "Which city's coat of arms features a snow leopard?", a: "Almaty", o: ["Astana", "Almaty", "Baku", "Tashkent"], x: "Almaty is a major city in Kazakhstan and a former capital." },
+        { c: "ASIA", q: "What was Mumbai formerly called?", a: "Bombay", o: ["Calcutta", "Madras", "Bombay", "Bangalore"], x: "Mumbai was officially renamed from Bombay in 1995." },
+        { c: "OCEANIA", q: "What is the capital of Samoa?", a: "Apia", o: ["Suva", "Apia", "Nuku'alofa", "Honiara"], x: "Apia is the capital and largest city of Samoa, a Polynesian nation." },
+        { c: "OCEANIA", q: "What are Australia's two largest cities?", a: "Sydney and Melbourne", o: ["Sydney and Melbourne", "Perth and Sydney", "Melbourne and Brisbane", "Canberra and Sydney"], x: "Sydney and Melbourne are the primary financial and cultural hubs of Australia." },
+        { c: "EUROPE", q: "Which non-EU country is Western Europe's largest?", a: "Switzerland", o: ["Norway", "United Kingdom", "Switzerland", "Iceland"], x: "Switzerland remains neutral and is not a member of the European Union." },
+        { c: "EUROPE", q: "Where is the 'Running of the Bulls' held?", a: "Pamplona", o: ["Madrid", "Barcelona", "Pamplona", "Seville"], x: "This event takes place annually in Pamplona, northern Spain." },
+        { c: "EUROPE", q: "Which capital is famous for its many canals?", a: "Amsterdam", o: ["Venice", "Amsterdam", "Copenhagen", "Bruges"], x: "Amsterdam is the capital of the Netherlands and is built on water." },
+        { c: "EUROPE", q: "Kyiv is the capital of which country?", a: "Ukraine", o: ["Poland", "Ukraine", "Belarus", "Russia"], x: "Kyiv is the capital of Ukraine, which includes the Crimean Peninsula." },
+        { c: "EUROPE", q: "The Nobel Peace Prize is awarded in which city?", a: "Oslo", o: ["Stockholm", "Oslo", "Geneva", "Paris"], x: "Unlike other Nobels, the Peace Prize ceremony is held in Oslo, Norway." },
+        { c: "EUROPE", q: "Which city was a hub for the Industrial Revolution?", a: "Manchester", o: ["London", "Liverpool", "Manchester", "Birmingham"], x: "Manchester, England's 3rd largest city, was at the heart of industrial history." },
+        { c: "USA", q: "Where was Earth's hottest temperature recorded?", a: "Furnace Creek", o: ["Sahara", "Furnace Creek", "Lut Desert", "Dubai"], x: "Furnace Creek in Death Valley, California, holds the world record." },
+        { c: "USA", q: "The Denali Star rail service is in which state?", a: "Alaska", o: ["Colorado", "Alaska", "Washington", "Montana"], x: "The Denali Star is a premier passenger train in Alaska." },
+        { c: "USA", q: "Portland, Oregon sits near the mouth of which river?", a: "Willamette River", o: ["Columbia", "Willamette River", "Snake", "Missouri"], x: "The Willamette River flows through the center of Portland." },
+        { c: "USA", q: "Which dam creates Lake Mead?", a: "Hoover Dam", o: ["Grand Coulee", "Hoover Dam", "Glen Canyon", "Fort Peck"], x: "The Hoover Dam on the Colorado River creates the largest U.S. reservoir." },
+        { c: "USA", q: "What is the longest river in the U.S.?", a: "Missouri River", o: ["Mississippi", "Missouri River", "Rio Grande", "Colorado"], x: "The Missouri is slightly longer than the Mississippi." },
+        { c: "CANADA", q: "The CN Tower is in which province?", a: "Ontario", o: ["Quebec", "Ontario", "Alberta", "BC"], x: "Ontario is the most populous province in Canada." },
+        { c: "LATIN AMER", q: "What is the primary river of Venezuela?", a: "Orinoco", o: ["Amazon", "Orinoco", "Parana", "Magdalena"], x: "The Orinoco is one of the longest rivers in South America." },
+        { c: "LATIN AMER", q: "What is the world's longest continental mountain range?", a: "The Andes", o: ["The Rockies", "The Andes", "The Himalayas", "The Alps"], x: "The Andes run the entire length of South America's west coast." },
+        { c: "CARIBBEAN", q: "What is the capital of Barbados?", a: "Bridgetown", o: ["Nassau", "Kingston", "Bridgetown", "Castries"], x: "Bridgetown is the capital of Barbados, located in the Atlantic/Caribbean." },
+        { c: "LATIN AMER", q: "Asunción is the capital of which country?", a: "Paraguay", o: ["Uruguay", "Paraguay", "Bolivia", "Chile"], x: "Paraguay is bordered by Brazil, Argentina, and Bolivia." }
     ];
 
     let currentIdx = 0;
-    let xp = 0;
     let hp = 3;
+    let gold = 0;
+    let streak = 0;
+    let deck = [];
 
-    function init() {
-        renderSlide();
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
     }
 
-    function renderSlide() {
-        if (currentIdx >= fullFactList.length) {
-            showWin();
+    function initGame() {
+        deck = shuffle([...database]);
+        renderCard();
+    }
+
+    function renderCard() {
+        if (currentIdx >= deck.length) {
+            showEnd(true);
             return;
         }
-
-        const data = fullFactList[currentIdx];
-        const slide = document.getElementById('current-slide');
-        const nextBtn = document.getElementById('next-btn');
-        const expBox = document.getElementById('explanation-box');
-
-        nextBtn.style.display = "none";
-        expBox.style.display = "none";
-        document.getElementById('bar').style.width = `${(currentIdx / fullFactList.length) * 100}%`;
-
-        // Mix correct answer with alternatives
-        let choices = [data.a, ...data.alt].sort(() => Math.random() - 0.5);
-
-        slide.innerHTML = `
-            <span class="category">${data.cat}</span>
-            <h2>${data.q}</h2>
-            <div class="options-list">
-                ${choices.map(c => `<button class="opt" onclick="handleSelect(this, '${c}')">${c}</button>`).join('')}
+        const data = deck[currentIdx];
+        const container = document.getElementById('card-container');
+        container.innerHTML = `
+            <div class="card enter" id="active-card">
+                <span class="category-tag">${data.c}</span>
+                <h2>${data.q}</h2>
+                <div class="options-grid">
+                    ${shuffle(data.o).map(opt => `<button class="btn-opt" onclick="checkChoice(this, '${opt}')">${opt}</button>`).join('')}
+                </div>
             </div>
         `;
+        setTimeout(() => document.getElementById('active-card').classList.remove('enter'), 50);
+        document.getElementById('player-sprite').style.left = `${(currentIdx / deck.length) * 90}%`;
     }
 
-    function handleSelect(btn, choice) {
-        const data = fullFactList[currentIdx];
-        const allButtons = document.querySelectorAll('.opt');
-        allButtons.forEach(b => b.disabled = true);
+    function checkChoice(btn, choice) {
+        const data = deck[currentIdx];
+        const allBtns = document.querySelectorAll('.btn-opt');
+        allBtns.forEach(b => b.disabled = true);
 
         if (choice === data.a) {
             btn.classList.add('correct');
-            xp += 150;
-            document.getElementById('score-display').innerText = `XP: ${xp}`;
+            gold += (10 * (streak + 1));
+            streak++;
+            document.getElementById('gold').innerText = gold;
+            document.getElementById('streak').innerText = streak;
+            setTimeout(nextSlide, 800);
         } else {
             btn.classList.add('wrong');
             hp--;
-            document.getElementById('hp-display').innerText = "❤️".repeat(Math.max(0, hp)) + "🖤".repeat(3 - hp);
-            document.getElementById('current-slide').classList.add('shake');
-            setTimeout(() => document.getElementById('current-slide').classList.remove('shake'), 300);
+            streak = 0;
+            document.getElementById('hp').innerText = "❤".repeat(Math.max(0, hp)) + "🖤".repeat(3 - hp);
+            document.getElementById('streak').innerText = streak;
+            document.getElementById('game-world').classList.add('shake');
+            setTimeout(() => document.getElementById('game-world').classList.remove('shake'), 400);
             
-            // Show correct one
-            allButtons.forEach(b => { if(b.innerText === data.a) b.classList.add('correct'); });
+            // Show correct answer
+            allBtns.forEach(b => { if(b.innerText === data.a) b.classList.add('correct'); });
+
+            // Show Log
+            document.getElementById('log-text').innerText = data.x;
+            document.getElementById('quest-log').style.display = 'block';
 
             if (hp <= 0) {
-                setTimeout(showGameOver, 1000);
-                return;
+                setTimeout(() => showEnd(false), 1000);
             }
         }
-
-        document.getElementById('fact-text').innerText = data.e;
-        document.getElementById('explanation-box').style.display = "block";
-        document.getElementById('next-btn').style.display = "block";
     }
 
-    function moveToNext() {
-        const slide = document.getElementById('current-slide');
-        slide.classList.add('slide-out');
+    function nextSlide() {
+        document.getElementById('quest-log').style.display = 'none';
+        const card = document.getElementById('active-card');
+        if (card) card.classList.add('exit');
         
         setTimeout(() => {
             currentIdx++;
-            slide.classList.remove('slide-out');
-            renderSlide();
+            renderCard();
         }, 400);
     }
 
-    function showWin() {
-        document.getElementById('game-wrapper').innerHTML = `
-            <div class="slide">
-                <h1 style="font-family:'Bungee'; color:var(--correct)">EXPEDITION COMPLETE!</h1>
-                <p>You mastered all ${fullFactList.length} geography facts.</p>
-                <p>Final XP: ${xp}</p>
-                <button id="next-btn" style="display:block" onclick="location.reload()">NEW GAME</button>
+    function showEnd(victory) {
+        const title = victory ? "EXPEDITION CLEAR!" : "YOU DIED";
+        const rank = gold > 400 ? "GOD OF MAPS" : "NOVICE TRAVELER";
+        document.getElementById('game-world').innerHTML = `
+            <div style="text-align:center; padding: 50px; font-family:'Press Start 2P';">
+                <h1 style="color:${victory ? 'var(--success)' : 'var(--danger)'}">${title}</h1>
+                <p style="font-size:10px">FINAL GOLD: ${gold}</p>
+                <p style="font-size:10px; color:var(--gold)">RANK: ${rank}</p>
+                <button class="next-btn" style="margin-top:20px" onclick="location.reload()">RESTART QUEST</button>
             </div>
         `;
     }
 
-    function showGameOver() {
-        document.getElementById('game-wrapper').innerHTML = `
-            <div class="slide" style="border-color: var(--wrong)">
-                <h1 style="font-family:'Bungee'; color:var(--wrong)">EXPEDITION FAILED</h1>
-                <p>You ran out of health. Review your notes and try again!</p>
-                <button id="next-btn" style="display:block" onclick="location.reload()">RETRY QUEST</button>
-            </div>
-        `;
-    }
-
-    init();
+    initGame();
 </script>
 
 </body>
