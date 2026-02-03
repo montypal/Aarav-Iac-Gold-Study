@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Geography Quiz</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background-color: #f4f7f6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .quiz-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .question { margin-bottom: 25px; padding: 15px; border-left: 5px solid #3498db; background: #fafafa; }
+        .options { list-style: none; padding: 0; }
+        .options li { margin: 10px 0; }
+        button { display: block; width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; transition: background 0.3s; }
+        button:hover { background: #2980b9; }
+        #results { margin-top: 20px; text-align: center; font-weight: bold; font-size: 22px; display: none; }
+        .correct { color: #27ae60; }
+        .incorrect { color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>🌍 Global Geography Quiz</h1>
+    <form id="quizForm">
+        <div id="questionsContainer"></div>
+        <button type="button" onclick="calculateScore()">Submit Quiz</button>
+    </form>
+    <div id="results"></div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "Where does the world’s largest population of lions live?", a: "The Serengeti (Tanzania)", options: ["The Serengeti (Tanzania)", "Kruger National Park", "Maasai Mara", "Okavango Delta"] },
+        { q: "What is the capital of Ethiopia?", a: "Addis Ababa", options: ["Nairobi", "Addis Ababa", "Asmara", "Mogadishu"] },
+        { q: "Which city is the largest in the United Arab Emirates?", a: "Dubai", options: ["Abu Dhabi", "Sharjah", "Dubai", "Doha"] },
+        { q: "The confluence of the Tigris and Euphrates Rivers occurs in which country?", a: "Iraq", options: ["Syria", "Turkey", "Iran", "Iraq"] },
+        { q: "The Gobi Desert stretches across northern China and which other country?", a: "Mongolia", options: ["Kazakhstan", "Mongolia", "Russia", "Vietnam"] },
+        { q: "What is the primary language spoken in Hong Kong?", a: "Cantonese", options: ["Mandarin", "Cantonese", "Hakka", "English"] },
+        { q: "Ankara and Istanbul are major cities in which country?", a: "Turkey", options: ["Greece", "Turkey", "Egypt", "Jordan"] },
+        { q: "What is the largest island belonging entirely to Indonesia by area?", a: "Sumatra", options: ["Java", "Bali", "Sumatra", "Borneo"] },
+        { q: "A snow leopard appears on the coat of arms of which Kazakh city?", a: "Almaty", options: ["Astana", "Almaty", "Shymkent", "Aktau"] },
+        { q: "What was the former name of the Indian port city Mumbai?", a: "Bombay", options: ["Calcutta", "Madras", "Bombay", "Bangalore"] },
+        { q: "What is the capital of Samoa?", a: "Apia", options: ["Suva", "Nuku'alofa", "Apia", "Honiara"] },
+        { q: "What are the two largest cities in Australia?", a: "Sydney and Melbourne", options: ["Sydney and Melbourne", "Sydney and Brisbane", "Melbourne and Perth", "Canberra and Sydney"] },
+        { q: "Which is the largest country in Western Europe that is NOT a member of the EU?", a: "Switzerland", options: ["Norway", "United Kingdom", "Switzerland", "Iceland"] },
+        { q: "In which Spanish city does the 'running of the bulls' take place?", a: "Pamplona", options: ["Madrid", "Barcelona", "Seville", "Pamplona"] },
+        { q: "Which European capital is famous for its large number of canals?", a: "Amsterdam", options: ["Venice", "Amsterdam", "Copenhagen", "Bruges"] },
+        { q: "Kyiv is the capital of which country?", a: "Ukraine", options: ["Russia", "Poland", "Ukraine", "Belarus"] },
+        { q: "Where is the Nobel Peace Prize awarded?", a: "Oslo, Norway", options: ["Stockholm, Sweden", "Geneva, Switzerland", "Oslo, Norway", "Copenhagen, Denmark"] },
+        { q: "Manchester was a major hub of which historical era?", a: "Industrial Revolution", options: ["The Renaissance", "Industrial Revolution", "The Enlightenment", "The Space Age"] },
+        { q: "Which location recorded the hottest temperature on Earth?", a: "Furnace Creek, Death Valley", options: ["Sahara Desert", "Furnace Creek, Death Valley", "Lut Desert", "Alice Springs"] },
+        { q: "The Denali Star rail service operates in which U.S. state?", a: "Alaska", options: ["Colorado", "Montana", "Alaska", "Washington"] },
+        { q: "Portland, Oregon is located near the mouth of which river?", a: "Willamette River", options: ["Columbia River", "Willamette River", "Snake River", "Oregon River"] },
+        { q: "Lake Mead was created by the construction of which dam?", a: "Hoover Dam", options: ["Grand Coulee Dam", "Hoover Dam", "Glen Canyon Dam", "Fort Peck Dam"] },
+        { q: "Which is the longest river in the United States?", a: "Missouri River", options: ["Mississippi River", "Missouri River", "Colorado River", "Rio Grande"] },
+        { q: "The CN Tower is located in which Canadian province?", a: "Ontario", options: ["Quebec", "British Columbia", "Ontario", "Alberta"] },
+        { q: "Which is the primary river of Venezuela?", a: "Orinoco", options: ["Amazon", "Orinoco", "Parana", "Magdalena"] },
+        { q: "What is the longest continental mountain range in the world?", a: "The Andes", options: ["The Rockies", "The Himalayas", "The Andes", "The Alps"] },
+        { q: "Bridgetown is the capital of which island country?", a: "Barbados", options: ["Jamaica", "The Bahamas", "Barbados", "Saint Lucia"] },
+        { q: "Asunción is the capital of which landlocked country?", a: "Paraguay", options: ["Bolivia", "Uruguay", "Paraguay", "Ecuador"] }
+    ];
+
+    const container = document.getElementById('questionsContainer');
+
+    quizData.forEach((item, index) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question';
+        qDiv.innerHTML = `<p><strong>${index + 1}. ${item.q}</strong></p>`;
+        
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options';
+        
+        item.options.forEach(option => {
+            optionsList.innerHTML += `
+                <li>
+                    <label>
+                        <input type="radio" name="q${index}" value="${option}"> ${option}
+                    </label>
+                </li>`;
+        });
+        
+        qDiv.appendChild(optionsList);
+        container.appendChild(qDiv);
+    });
+
+    function calculateScore() {
+        let score = 0;
+        quizData.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            if (selected && selected.value === item.a) {
+                score++;
+            }
+        });
+        
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = `You scored ${score} out of ${quizData.length}!`;
+        resultsDiv.className = score === quizData.length ? 'correct' : 'incorrect';
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+</script>
+
+</body>
+</html>
