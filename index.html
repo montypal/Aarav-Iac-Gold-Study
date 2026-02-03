@@ -2,254 +2,317 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geo-Drifter: The Lost Compass</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GEO-RELIC: OMNI-TITAN ENGINE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366f1; --gold: #fbbf24; --heart: #ff4757;
-            --bg: #0f172a; --card: #1e293b; --text: #f8fafc;
+            --neon-primary: #00ff88; --neon-danger: #ff0055; --neon-info: #00d9ff;
+            --gold: #ffcc00; --deep-bg: #020205; --panel-bg: #0a0a0f;
+            --glass: rgba(255, 255, 255, 0.03);
         }
-        * { box-sizing: border-box; }
+
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { 
-            font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text);
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
-        }
-        #phone-frame {
-            width: 380px; height: 750px; background: #000; border: 12px solid #334155;
-            border-radius: 40px; position: relative; overflow: hidden; display: flex; flex-direction: column;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            background: #000; color: #e0e0e0; font-family: 'JetBrains Mono', monospace;
+            margin: 0; display: flex; justify-content: center; align-items: center; 
+            height: 100vh; overflow: hidden;
         }
 
-        /* Top Bar */
-        .status-bar { padding: 25px 20px 10px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); }
-        .stat { display: flex; align-items: center; gap: 5px; font-weight: 900; }
-        .gold-txt { color: var(--gold); }
-        .hp-txt { color: var(--heart); }
+        /* HARDWARE CASING */
+        #mobile-chassis {
+            width: 430px; height: 900px; background: var(--deep-bg);
+            border: 8px solid #1a1a2e; border-radius: 60px; position: relative;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 0 80px rgba(0, 255, 136, 0.1);
+        }
 
-        /* Story/Map Header */
-        .story-header { padding: 15px; text-align: center; border-bottom: 1px solid #334155; }
-        .story-header h1 { font-size: 0.8rem; font-family: 'Press Start 2P'; margin: 0; color: var(--primary); }
-        
-        /* The Shop (Modal-ish) */
-        #shop-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg); z-index: 100; padding: 30px; display: none;
-        }
-        .shop-item {
-            background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center; border: 2px solid #334155;
-        }
-        .buy-btn { background: var(--gold); border: none; padding: 8px 12px; border-radius: 8px; font-weight: 900; cursor: pointer; }
+        /* TOP STATUS BAR */
+        .status-bar { height: 140px; padding: 45px 30px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: linear-gradient(to bottom, #000, transparent); z-index: 100; }
+        .data-pill { background: var(--panel-bg); border: 1px solid #222; padding: 10px; border-radius: 12px; position: relative; overflow: hidden; }
+        .label { font-size: 9px; text-transform: uppercase; color: #555; font-weight: 900; }
+        .value { font-family: 'Orbitron'; font-size: 14px; color: var(--neon-primary); }
+        .progress-fill { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--neon-primary); transition: 0.5s; }
 
-        /* Game Slide */
-        #game-content { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
-        .card { 
-            background: var(--card); padding: 25px; border-radius: 25px; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.4s;
+        /* THE WORLD MAP SYSTEM */
+        #map-viewport { flex-grow: 1; position: relative; background: #050508; overflow: hidden; }
+        #world-grid { 
+            position: absolute; width: 1000px; height: 1000px; 
+            background-image: radial-gradient(#1a1a2e 1px, transparent 1px);
+            background-size: 40px 40px; transition: 0.2s ease-out;
         }
-        .q-tag { font-size: 0.7rem; font-weight: 900; color: var(--primary); letter-spacing: 2px; }
-        h2 { font-size: 1.25rem; margin: 15px 0; line-height: 1.3; }
-        
-        .opt-list { display: grid; gap: 10px; }
-        .opt { 
-            background: #334155; border: none; color: white; padding: 15px; 
-            border-radius: 15px; text-align: left; font-size: 1rem; cursor: pointer;
-            transition: 0.2s; font-weight: 600;
+        .node { 
+            position: absolute; width: 50px; height: 50px; background: var(--glass); 
+            border: 2px solid var(--neon-info); border-radius: 50%; display: grid; 
+            place-items: center; font-size: 20px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
         }
-        .opt:hover { background: #475569; }
-        .opt.correct { background: #10b981 !important; }
-        .opt.wrong { background: #ef4444 !important; }
+        .node.completed { border-color: #444; color: #444; }
+        #player-token { 
+            position: absolute; width: 30px; height: 30px; background: var(--neon-primary); 
+            border-radius: 5px; z-index: 50; transition: 0.3s; box-shadow: 0 0 20px var(--neon-primary);
+        }
 
-        /* Power Up Indicators */
-        #power-badges { height: 30px; display: flex; gap: 10px; padding: 0 20px; }
-        .badge { font-size: 0.6rem; background: #4f46e5; padding: 2px 8px; border-radius: 10px; display: none; }
+        /* FIDGET DASHBOARD */
+        #fidget-deck { position: absolute; bottom: 100px; left: 0; width: 100%; height: 80px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: space-around; padding: 0 20px; border-top: 1px solid #222; }
+        .fidget-spinner-ui { width: 50px; height: 50px; background: #111; border-radius: 50%; border: 2px dashed var(--neon-primary); animation: spin 2s linear infinite; cursor: pointer; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .fidget-toggle { width: 60px; height: 30px; background: #333; border-radius: 20px; position: relative; cursor: pointer; }
+        .fidget-toggle::after { content: ''; position: absolute; width: 26px; height: 26px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: 0.2s; }
+        .fidget-toggle.on::after { left: 32px; background: var(--neon-primary); }
 
-        /* Quest Log Popup */
-        #quest-log {
-            position: absolute; bottom: 0; width: 100%; background: #1e293b;
-            padding: 30px; border-top: 4px solid var(--gold); display: none; z-index: 50;
-        }
-        .next-btn { 
-            width: 100%; background: var(--gold); border: none; padding: 15px; 
-            border-radius: 15px; font-family: 'Press Start 2P'; font-size: 10px; margin-top: 15px;
-        }
+        /* MODAL OVERLAYS */
+        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 500; display: none; padding: 60px 30px; flex-direction: column; }
+        .btn-action { background: #111; border: 1px solid #333; color: #fff; padding: 20px; border-radius: 15px; margin-bottom: 10px; font-family: 'Orbitron'; cursor: pointer; text-align: left; }
+        .btn-action:hover { border-color: var(--neon-primary); }
+
+        /* QUIZ ENGINE */
+        #quiz-overlay { z-index: 600; background: var(--deep-bg); }
+        .choice-container { display: grid; gap: 10px; margin-top: 40px; }
+        .choice-btn { background: #0f172a; border: 1px solid #1e293b; color: #fff; padding: 25px; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .choice-btn:active { transform: scale(0.98); }
+
+        /* NAVIGATION BAR */
+        .bottom-tabs { height: 90px; background: #000; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #222; }
+        .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 10px; cursor: pointer; font-weight: 900; }
+        .tab.active { color: var(--neon-primary); }
+
+        /* WEATHER EFFECTS */
+        #weather-layer { position: absolute; inset: 0; pointer-events: none; z-index: 200; opacity: 0; transition: 1s; }
+        .storm { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(2px); }
     </style>
 </head>
 <body>
 
-<div id="phone-frame">
+<div id="mobile-chassis">
+    <div id="weather-layer"></div>
+
     <div class="status-bar">
-        <div class="stat hp-txt">HP: <span id="hp-val">5</span></div>
-        <div class="stat gold-txt">💰 <span id="gold-val">0</span></div>
-        <button onclick="toggleShop()" style="background:none; border:1px solid #fff; color:#fff; border-radius:5px; font-size:10px;">SHOP</button>
+        <div class="data-pill">
+            <div class="label">Integrity</div>
+            <div class="value" id="hp-val">100%</div>
+            <div class="progress-fill" id="hp-bar" style="width: 100%;"></div>
+        </div>
+        <div class="data-pill">
+            <div class="label">Credits</div>
+            <div class="value" id="gold-val" style="color:var(--gold)">0</div>
+        </div>
     </div>
 
-    <div id="power-badges">
-        <span id="badge-shield" class="badge">SHIELD ACTIVE</span>
-        <span id="badge-booster" class="badge">2X STREAK</span>
+    <div id="map-viewport">
+        <div id="world-grid">
+            <div id="player-token"></div>
+            </div>
     </div>
 
-    <div class="story-header">
-        <h1 id="location-name">CURRENT REGION: START</h1>
+    <div id="fidget-deck">
+        <div class="fidget-spinner-ui" onclick="fidgetClick(25)"></div>
+        <div class="fidget-toggle" id="f-toggle" onclick="fidgetToggle()"></div>
+        <div style="width:80px; height:10px; background:#222; border-radius:5px;"><div id="f-slide" style="width:0%; height:100%; background:var(--neon-info)"></div></div>
     </div>
 
-    <div id="game-content">
-        </div>
-
-    <div id="shop-overlay">
-        <h2 style="font-family:'Press Start 2P'; font-size: 15px;">TRADER'S POST</h2>
-        <p style="font-size: 0.8rem; opacity: 0.7;">Spend gold to survive the journey.</p>
-        <div class="shop-item">
-            <div><strong>Life Potion</strong><br><small>+1 Heart</small></div>
-            <button class="buy-btn" onclick="buyItem('health', 100)">100G</button>
-        </div>
-        <div class="shop-item">
-            <div><strong>Streak Booster</strong><br><small>Double Gold from streaks</small></div>
-            <button class="buy-btn" onclick="buyItem('booster', 250)">250G</button>
-        </div>
-        <div class="shop-item">
-            <div><strong>Amulet of Shield</strong><br><small>Prevents 1 wrong answer death</small></div>
-            <button class="buy-btn" onclick="buyItem('shield', 400)">400G</button>
-        </div>
-        <button class="next-btn" onclick="toggleShop()">EXIT SHOP</button>
+    <div id="vault-screen" class="ui-screen">
+        <h1 style="font-family:'Orbitron'; color:var(--neon-info)">THE ARCHIVE</h1>
+        <div id="relic-list" style="overflow-y:auto"></div>
+        <button class="btn-action" onclick="closeScreens()" style="margin-top:auto; text-align:center">CLOSE</button>
     </div>
 
-    <div id="quest-log">
-        <strong style="color:var(--gold)">MAP INSIGHT:</strong>
-        <p id="insight-text" style="font-size: 0.9rem; margin: 10px 0;"></p>
-        <button class="next-btn" onclick="closeLog()">CONTINUE QUEST</button>
+    <div id="quiz-overlay" class="ui-screen">
+        <div id="quiz-content"></div>
+    </div>
+
+    <div id="shop-screen" class="ui-screen">
+        <h1 style="font-family:'Orbitron'; color:var(--gold)">BLACK MARKET</h1>
+        <div class="btn-action" onclick="buy('nanite', 5000)">Repulsor Nanites (Shield) - 5,000G</div>
+        <div class="btn-action" onclick="buy('sat', 15000)">Satellite Link (Skip) - 15,000G</div>
+        <div class="btn-action" onclick="buy('core', 50000)">Omni-Core (Legendary) - 50,000G</div>
+        <button class="btn-action" onclick="closeScreens()" style="margin-top:auto; text-align:center">CLOSE</button>
+    </div>
+
+    <div class="bottom-tabs">
+        <div class="tab active" onclick="closeScreens()">MAP</div>
+        <div class="tab" onclick="openScreen('vault-screen')">VAULT</div>
+        <div class="tab" onclick="openScreen('shop-screen')">MARKET</div>
+        <div class="tab" id="weather-indicator">CLEAR</div>
     </div>
 </div>
 
 <script>
-    const database = [
-        { c: "AFRICA", q: "Where does the world's largest lion population live?", a: "The Serengeti", o: ["The Serengeti", "Kruger", "Sahara", "Okavango"], x: "The Serengeti is a grassland in Tanzania famous for its massive wildebeest migration." },
-        { c: "AFRICA", q: "What is the capital of Ethiopia?", a: "Addis Ababa", o: ["Nairobi", "Addis Ababa", "Asmara", "Lagos"], x: "Addis Ababa serves as the political and commercial heart of Ethiopia." },
-        { c: "ASIA", q: "What is the largest city in the UAE?", a: "Dubai", o: ["Abu Dhabi", "Dubai", "Sharjah", "Doha"], x: "While Abu Dhabi is the capital, Dubai is the most populous city." },
-        { c: "ASIA", q: "Where do the Tigris and Euphrates meet?", a: "Southern Iraq", o: ["Turkey", "Syria", "Southern Iraq", "Iran"], x: "This historic confluence occurs in southern Iraq before reaching the Persian Gulf." },
-        { c: "ASIA", q: "The Gobi Desert stretches across China and...", a: "Mongolia", o: ["Mongolia", "Russia", "Kazakhstan", "India"], x: "The Gobi is a vast, cold desert spanning northern China and southern Mongolia." },
-        { c: "ASIA", q: "What do people in Hong Kong primarily speak?", a: "Cantonese", o: ["Mandarin", "Cantonese", "Hakka", "English"], x: "Cantonese is the prestige variety of Chinese spoken in the south." },
-        { c: "ASIA", q: "Ankara and Istanbul are located in which country?", a: "Turkey", o: ["Turkey", "Greece", "Egypt", "Jordan"], x: "Ankara is the capital, while Istanbul bridges Europe and Asia." },
-        { c: "ASIA", q: "What is Indonesia's largest island by area (entirely held)?", a: "Sumatra", o: ["Java", "Bali", "Sumatra", "Lombok"], x: "Sumatra is the largest island that belongs 100% to Indonesia." },
-        { c: "ASIA", q: "Which city's coat of arms features a snow leopard?", a: "Almaty", o: ["Astana", "Almaty", "Baku", "Tashkent"], x: "Almaty is a major city in Kazakhstan and a former capital." },
-        { c: "ASIA", q: "What was Mumbai formerly called?", a: "Bombay", o: ["Calcutta", "Madras", "Bombay", "Bangalore"], x: "Mumbai was officially renamed from Bombay in 1995." },
-        { c: "OCEANIA", q: "What is the capital of Samoa?", a: "Apia", o: ["Suva", "Apia", "Nuku'alofa", "Honiara"], x: "Apia is the capital and largest city of Samoa, a Polynesian nation." },
-        { c: "OCEANIA", q: "What are Australia's two largest cities?", a: "Sydney and Melbourne", o: ["Sydney and Melbourne", "Perth and Sydney", "Melbourne and Brisbane", "Canberra and Sydney"], x: "Sydney and Melbourne are the primary financial and cultural hubs of Australia." },
-        { c: "EUROPE", q: "Which non-EU country is Western Europe's largest?", a: "Switzerland", o: ["Norway", "United Kingdom", "Switzerland", "Iceland"], x: "Switzerland remains neutral and is not a member of the European Union." },
-        { c: "EUROPE", q: "Where is the 'Running of the Bulls' held?", a: "Pamplona", o: ["Madrid", "Barcelona", "Pamplona", "Seville"], x: "This event takes place annually in Pamplona, northern Spain." },
-        { c: "EUROPE", q: "Which capital is famous for its many canals?", a: "Amsterdam", o: ["Venice", "Amsterdam", "Copenhagen", "Bruges"], x: "Amsterdam is the capital of the Netherlands and is built on water." },
-        { c: "EUROPE", q: "Kyiv is the capital of which country?", a: "Ukraine", o: ["Poland", "Ukraine", "Belarus", "Russia"], x: "Kyiv is the capital of Ukraine, which includes the Crimean Peninsula." },
-        { c: "EUROPE", q: "The Nobel Peace Prize is awarded in which city?", a: "Oslo", o: ["Stockholm", "Oslo", "Geneva", "Paris"], x: "Unlike other Nobels, the Peace Prize ceremony is held in Oslo, Norway." },
-        { c: "EUROPE", q: "Which city was a hub for the Industrial Revolution?", a: "Manchester", o: ["London", "Liverpool", "Manchester", "Birmingham"], x: "Manchester, England's 3rd largest city, was at the heart of industrial history." },
-        { c: "USA", q: "Where was Earth's hottest temperature recorded?", a: "Furnace Creek", o: ["Sahara", "Furnace Creek", "Lut Desert", "Dubai"], x: "Furnace Creek in Death Valley, California, holds the world record." },
-        { c: "USA", q: "The Denali Star rail service is in which state?", a: "Alaska", o: ["Colorado", "Alaska", "Washington", "Montana"], x: "The Denali Star is a premier passenger train in Alaska." },
-        { c: "USA", q: "Portland, Oregon sits near the mouth of which river?", a: "Willamette River", o: ["Columbia", "Willamette River", "Snake", "Missouri"], x: "The Willamette River flows through the center of Portland." },
-        { c: "USA", q: "Which dam creates Lake Mead?", a: "Hoover Dam", o: ["Grand Coulee", "Hoover Dam", "Glen Canyon", "Fort Peck"], x: "The Hoover Dam on the Colorado River creates the largest U.S. reservoir." },
-        { c: "USA", q: "What is the longest river in the U.S.?", a: "Missouri River", o: ["Mississippi", "Missouri River", "Rio Grande", "Colorado"], x: "The Missouri is slightly longer than the Mississippi." },
-        { c: "CANADA", q: "The CN Tower is in which province?", a: "Ontario", o: ["Quebec", "Ontario", "Alberta", "BC"], x: "Ontario is the most populous province in Canada." },
-        { c: "LATIN AMER", q: "What is the primary river of Venezuela?", a: "Orinoco", o: ["Amazon", "Orinoco", "Parana", "Magdalena"], x: "The Orinoco is one of the longest rivers in South America." },
-        { c: "LATIN AMER", q: "What is the world's longest continental mountain range?", a: "The Andes", o: ["The Rockies", "The Andes", "The Himalayas", "The Alps"], x: "The Andes run the entire length of South America's west coast." },
-        { c: "CARIBBEAN", q: "What is the capital of Barbados?", a: "Bridgetown", o: ["Nassau", "Kingston", "Bridgetown", "Castries"], x: "Bridgetown is the capital of Barbados, located in the Atlantic/Caribbean." },
-        { c: "LATIN AMER", q: "Asunción is the capital of which country?", a: "Paraguay", o: ["Uruguay", "Paraguay", "Bolivia", "Chile"], x: "Paraguay is bordered by Brazil, Argentina, and Bolivia." }
+    /**
+     * GEOGRAPHY ENGINE DATA
+     */
+    const GEO_DB = [
+        { q: "Which country has the most time zones?", a: "France", o: ["USA", "Russia", "France", "China"], lat: 200, lng: 300 },
+        { q: "What is the largest country by area in Africa?", a: "Algeria", o: ["Nigeria", "Algeria", "Sudan", "Congo"], lat: 400, lng: 500 },
+        { q: "Mount Vesuvius overlooks which modern city?", a: "Naples", o: ["Rome", "Naples", "Florence", "Palermo"], lat: 150, lng: 450 },
+        { q: "Which desert covers much of Mongolia?", a: "Gobi", o: ["Sahara", "Gobi", "Thar", "Atacama"], lat: 300, lng: 700 },
+        { q: "What is the world's northernmost capital city?", a: "Reykjavik", o: ["Oslo", "Reykjavik", "Helsinki", "Ottawa"], lat: 50, lng: 200 },
+        { q: "In which ocean is the island of Madagascar?", a: "Indian Ocean", o: ["Atlantic", "Pacific", "Indian Ocean", "Southern"], lat: 650, lng: 600 },
+        { q: "The Mekong River flows into which sea?", a: "South China Sea", o: ["Sea of Japan", "South China Sea", "Andaman Sea", "Red Sea"], lat: 500, lng: 800 },
+        { q: "Which South American country is landlocked?", a: "Bolivia", o: ["Chile", "Bolivia", "Peru", "Guyana"], lat: 700, lng: 350 }
     ];
 
-    let currentIdx = 0;
-    let gold = 0;
-    let hp = 5;
-    let streak = 0;
-    let powerUps = { shield: false, booster: false };
-    let shuffledDeck = [];
+    /**
+     * GAME STATE ENGINE
+     */
+    const GameState = {
+        hp: 100, gold: 0, 
+        currentPos: { x: 50, y: 50 },
+        discovered: [],
+        inventory: [],
+        activeNode: null,
+        weather: 'CLEAR'
+    };
 
+    /**
+     * INITIALIZATION
+     */
     function init() {
-        shuffledDeck = database.sort(() => Math.random() - 0.5);
-        render();
+        const grid = document.getElementById('world-grid');
+        GEO_DB.forEach((node, index) => {
+            const div = document.createElement('div');
+            div.className = 'node';
+            div.style.left = node.lng + 'px';
+            div.style.top = node.lat + 'px';
+            div.innerHTML = '📍';
+            div.onclick = () => movePlayer(node, index);
+            grid.appendChild(div);
+        });
+        updateHUD();
+        weatherCycle();
     }
 
-    function render() {
-        if (currentIdx >= shuffledDeck.length) { alert("YOU WON THE GAME!"); location.reload(); return; }
-        const d = shuffledDeck[currentIdx];
-        document.getElementById('location-name').innerText = `REGION: ${d.c}`;
-        const content = document.getElementById('game-content');
+    /**
+     * NAVIGATION ENGINE
+     */
+    function movePlayer(node, index) {
+        if(GameState.discovered.includes(index)) return;
         
-        let options = [...d.o].sort(() => Math.random() - 0.5);
+        const token = document.getElementById('player-token');
+        token.style.left = (node.lng + 10) + 'px';
+        token.style.top = (node.lat + 10) + 'px';
+        
+        GameState.activeNode = { ...node, id: index };
+        setTimeout(() => startQuiz(node), 400);
+    }
 
+    /**
+     * QUIZ CONTROLLER
+     */
+    function startQuiz(data) {
+        const overlay = document.getElementById('quiz-overlay');
+        const content = document.getElementById('quiz-content');
+        overlay.style.display = 'flex';
+        
+        let shuffled = [...data.o].sort(() => Math.random() - 0.5);
+        
         content.innerHTML = `
-            <div class="card">
-                <span class="q-tag">QUEST ${currentIdx + 1}/${shuffledDeck.length}</span>
-                <h2>${d.q}</h2>
-                <div class="opt-list">
-                    ${options.map(o => `<button class="opt" onclick="check(this, '${o}')">${o}</button>`).join('')}
-                </div>
+            <div style="font-size:12px; color:var(--neon-info); margin-bottom:10px;">ENCOUNTER: ${GameState.weather} CONDITIONS</div>
+            <h2 style="font-family:'Orbitron'; line-height:1.4;">${data.q}</h2>
+            <div class="choice-container">
+                ${shuffled.map(o => `<button class="choice-btn" onclick="handleChoice('${o}')">${o}</button>`).join('')}
             </div>
         `;
-    }
 
-    function check(btn, choice) {
-        const d = shuffledDeck[currentIdx];
-        const all = document.querySelectorAll('.opt');
-        all.forEach(b => b.disabled = true);
-
-        if (choice === d.a) {
-            btn.classList.add('correct');
-            let reward = 50 + (streak * 10);
-            if (powerUps.booster) reward *= 2;
-            gold += reward;
-            streak++;
-            updateStats();
-            setTimeout(next, 600);
-        } else {
-            if (powerUps.shield) {
-                powerUps.shield = false;
-                document.getElementById('badge-shield').style.display = 'none';
-                alert("SHIELD BROKEN! You survived.");
-            } else {
-                hp--;
-                streak = 0;
-                btn.classList.add('wrong');
-            }
-            
-            updateStats();
-            all.forEach(b => { if(b.innerText === d.a) b.classList.add('correct'); });
-            
-            document.getElementById('insight-text').innerText = d.x;
-            document.getElementById('quest-log').style.display = 'block';
-
-            if (hp <= 0) { alert("GAME OVER. Try again traveler."); location.reload(); }
+        if(GameState.weather === 'STORM') {
+            content.style.filter = 'blur(4px)';
+            setTimeout(() => content.style.filter = 'blur(0)', 1000);
         }
     }
 
-    function updateStats() {
-        document.getElementById('hp-val').innerText = hp;
-        document.getElementById('gold-val').innerText = gold;
+    function handleChoice(val) {
+        const correct = val === GameState.activeNode.a;
+        if(correct) {
+            GameState.gold += 1500;
+            GameState.discovered.push(GameState.activeNode.id);
+            alert("✅ RELIC SECURED (+1500G)");
+        } else {
+            GameState.hp -= 20;
+            alert("❌ INTEGRITY BREACHED (-20%)");
+        }
+        
+        updateHUD();
+        closeScreens();
+        
+        if(GameState.hp <= 0) {
+            alert("CRITICAL FAILURE: Memory Wipe Initialized.");
+            location.reload();
+        }
     }
 
-    function next() {
-        currentIdx++;
-        render();
+    /**
+     * FIDGET LOGIC
+     */
+    function fidgetClick(amt) {
+        GameState.gold += 10;
+        updateHUD();
+        // Shake animation
+        const s = document.querySelector('.fidget-spinner-ui');
+        s.style.borderColor = "var(--neon-danger)";
+        setTimeout(() => s.style.borderColor = "var(--neon-primary)", 100);
     }
 
-    function closeLog() {
-        document.getElementById('quest-log').style.display = 'none';
-        next();
+    function fidgetToggle() {
+        const t = document.getElementById('f-toggle');
+        t.classList.toggle('on');
+        GameState.gold += 50;
+        updateHUD();
     }
 
-    function toggleShop() {
-        const shop = document.getElementById('shop-overlay');
-        shop.style.display = (shop.style.display === 'block') ? 'none' : 'block';
+    /**
+     * WEATHER ENGINE
+     */
+    function weatherCycle() {
+        const layer = document.getElementById('weather-layer');
+        const ind = document.getElementById('weather-indicator');
+        const r = Math.random();
+        
+        if(r > 0.7) {
+            GameState.weather = 'STORM';
+            layer.style.opacity = '1';
+            layer.classList.add('storm');
+            ind.style.color = 'var(--neon-danger)';
+            ind.innerText = 'STORM';
+        } else {
+            GameState.weather = 'CLEAR';
+            layer.style.opacity = '0';
+            ind.style.color = '#444';
+            ind.innerText = 'CLEAR';
+        }
+        setTimeout(weatherCycle, 10000);
     }
 
-    function buyItem(type, cost) {
-        if (gold < cost) { alert("Not enough gold!"); return; }
-        gold -= cost;
-        if (type === 'health') hp++;
-        if (type === 'booster') { powerUps.booster = true; document.getElementById('badge-booster').style.display = 'block'; }
-        if (type === 'shield') { powerUps.shield = true; document.getElementById('badge-shield').style.display = 'block'; }
-        updateStats();
-        alert("Purchase Successful!");
+    /**
+     * UI HELPERS
+     */
+    function updateHUD() {
+        document.getElementById('hp-val').innerText = GameState.hp + "%";
+        document.getElementById('hp-bar').style.width = GameState.hp + "%";
+        document.getElementById('gold-val').innerText = GameState.gold.toLocaleString();
     }
 
+    function openScreen(id) {
+        document.querySelectorAll('.ui-screen').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    function closeScreens() {
+        document.querySelectorAll('.ui-screen').forEach(s => s.style.display = 'none');
+    }
+
+    function buy(item, price) {
+        if(GameState.gold >= price) {
+            GameState.gold -= price;
+            GameState.inventory.push(item);
+            updateHUD();
+            alert("Acquired: " + item);
+        } else {
+            alert("Insufficient Credits.");
+        }
+    }
+
+    // Initialize Game
     init();
+
 </script>
 </body>
 </html>
