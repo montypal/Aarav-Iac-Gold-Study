@@ -3,116 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoQuest: The Legend of the 7 Continents</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;900&display=swap" rel="stylesheet">
+    <title>Geo-Drifter: The Lost Compass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4f46e5; --success: #10b981; --danger: #ef4444;
-            --gold: #fbbf24; --bg: #020617; --card: #1e293b;
+            --primary: #6366f1; --gold: #fbbf24; --heart: #ff4757;
+            --bg: #0f172a; --card: #1e293b; --text: #f8fafc;
         }
         * { box-sizing: border-box; }
         body { 
-            font-family: 'Inter', sans-serif; background-color: var(--bg); color: white;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden;
+            font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
         }
+        #phone-frame {
+            width: 380px; height: 750px; background: #000; border: 12px solid #334155;
+            border-radius: 40px; position: relative; overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        /* Top Bar */
+        .status-bar { padding: 25px 20px 10px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); }
+        .stat { display: flex; align-items: center; gap: 5px; font-weight: 900; }
+        .gold-txt { color: var(--gold); }
+        .hp-txt { color: var(--heart); }
+
+        /* Story/Map Header */
+        .story-header { padding: 15px; text-align: center; border-bottom: 1px solid #334155; }
+        .story-header h1 { font-size: 0.8rem; font-family: 'Press Start 2P'; margin: 0; color: var(--primary); }
         
-        /* Game Map/World */
-        #game-world {
-            width: 100%; max-width: 600px; height: 90vh; background: #0f172a;
-            border: 4px solid #334155; border-radius: 20px; position: relative;
-            display: flex; flex-direction: column; overflow: hidden;
+        /* The Shop (Modal-ish) */
+        #shop-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg); z-index: 100; padding: 30px; display: none;
         }
+        .shop-item {
+            background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center; border: 2px solid #334155;
+        }
+        .buy-btn { background: var(--gold); border: none; padding: 8px 12px; border-radius: 8px; font-weight: 900; cursor: pointer; }
 
-        /* Top HUD */
-        .hud {
-            padding: 20px; background: rgba(0,0,0,0.5); font-family: 'Press Start 2P', cursive;
-            font-size: 8px; display: flex; justify-content: space-between; border-bottom: 2px solid #334155;
+        /* Game Slide */
+        #game-content { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
+        .card { 
+            background: var(--card); padding: 25px; border-radius: 25px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.4s;
         }
-        .stat-val { color: var(--gold); font-size: 10px; }
+        .q-tag { font-size: 0.7rem; font-weight: 900; color: var(--primary); letter-spacing: 2px; }
+        h2 { font-size: 1.25rem; margin: 15px 0; line-height: 1.3; }
+        
+        .opt-list { display: grid; gap: 10px; }
+        .opt { 
+            background: #334155; border: none; color: white; padding: 15px; 
+            border-radius: 15px; text-align: left; font-size: 1rem; cursor: pointer;
+            transition: 0.2s; font-weight: 600;
+        }
+        .opt:hover { background: #475569; }
+        .opt.correct { background: #10b981 !important; }
+        .opt.wrong { background: #ef4444 !important; }
 
-        /* Progress Path */
-        .map-path {
-            height: 60px; background: #1e293b; display: flex; align-items: center; padding: 0 20px;
-            position: relative; border-bottom: 1px solid #334155;
-        }
-        #player-sprite {
-            font-size: 24px; position: absolute; left: 0%; transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        /* Power Up Indicators */
+        #power-badges { height: 30px; display: flex; gap: 10px; padding: 0 20px; }
+        .badge { font-size: 0.6rem; background: #4f46e5; padding: 2px 8px; border-radius: 10px; display: none; }
 
-        /* Card Slide System */
-        #card-container {
-            flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 20px;
-            perspective: 1000px;
-        }
-        .card {
-            background: var(--card); width: 100%; padding: 25px; border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-bottom: 5px solid #000;
-            transition: transform 0.4s, opacity 0.4s;
-        }
-        .card.exit { transform: translateX(-120%) rotate(-10deg); opacity: 0; }
-        .card.enter { transform: scale(0.8); opacity: 0; }
-
-        .category-tag {
-            display: inline-block; background: var(--primary); padding: 5px 10px;
-            border-radius: 5px; font-size: 10px; font-family: 'Press Start 2P'; margin-bottom: 15px;
-        }
-
-        h2 { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.4; font-weight: 900; }
-
-        .options-grid { display: grid; gap: 12px; }
-        .btn-opt {
-            background: #334155; border: 2px solid transparent; color: white; padding: 15px;
-            border-radius: 10px; cursor: pointer; text-align: left; font-weight: bold; font-size: 1rem;
-            transition: 0.2s;
-        }
-        .btn-opt:hover { background: #475569; transform: translateY(-2px); }
-        .btn-opt.correct { background: var(--success) !important; animation: bounce 0.4s; }
-        .btn-opt.wrong { background: var(--danger) !important; }
-
-        /* Quest Log (Explanations) */
+        /* Quest Log Popup */
         #quest-log {
-            position: absolute; bottom: 0; left: 0; width: 100%; background: #000;
-            border-top: 3px solid var(--gold); padding: 20px; display: none; z-index: 10;
+            position: absolute; bottom: 0; width: 100%; background: #1e293b;
+            padding: 30px; border-top: 4px solid var(--gold); display: none; z-index: 50;
         }
-        #quest-log h3 { font-family: 'Press Start 2P'; font-size: 10px; color: var(--gold); margin-top: 0; }
-        #quest-log p { font-size: 0.9rem; margin-bottom: 15px; color: #cbd5e1; }
-        .next-btn {
-            background: var(--gold); color: black; border: none; padding: 10px 20px;
-            font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; width: 100%;
+        .next-btn { 
+            width: 100%; background: var(--gold); border: none; padding: 15px; 
+            border-radius: 15px; font-family: 'Press Start 2P'; font-size: 10px; margin-top: 15px;
         }
-
-        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .shake { animation: shake 0.4s; }
-        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(10px); } 50% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
     </style>
 </head>
 <body>
 
-<div id="game-world">
-    <div class="hud">
-        <div>HP: <span id="hp" class="stat-val">❤❤❤</span></div>
-        <div>GOLD: <span id="gold" class="stat-val">0</span></div>
-        <div>STREAK: <span id="streak" class="stat-val">0</span></div>
+<div id="phone-frame">
+    <div class="status-bar">
+        <div class="stat hp-txt">HP: <span id="hp-val">5</span></div>
+        <div class="stat gold-txt">💰 <span id="gold-val">0</span></div>
+        <button onclick="toggleShop()" style="background:none; border:1px solid #fff; color:#fff; border-radius:5px; font-size:10px;">SHOP</button>
     </div>
 
-    <div class="map-path">
-        <div id="player-sprite">🌍</div>
-        <div style="position:absolute; right: 20px;">🏁</div>
+    <div id="power-badges">
+        <span id="badge-shield" class="badge">SHIELD ACTIVE</span>
+        <span id="badge-booster" class="badge">2X STREAK</span>
     </div>
 
-    <div id="card-container">
+    <div class="story-header">
+        <h1 id="location-name">CURRENT REGION: START</h1>
+    </div>
+
+    <div id="game-content">
         </div>
 
+    <div id="shop-overlay">
+        <h2 style="font-family:'Press Start 2P'; font-size: 15px;">TRADER'S POST</h2>
+        <p style="font-size: 0.8rem; opacity: 0.7;">Spend gold to survive the journey.</p>
+        <div class="shop-item">
+            <div><strong>Life Potion</strong><br><small>+1 Heart</small></div>
+            <button class="buy-btn" onclick="buyItem('health', 100)">100G</button>
+        </div>
+        <div class="shop-item">
+            <div><strong>Streak Booster</strong><br><small>Double Gold from streaks</small></div>
+            <button class="buy-btn" onclick="buyItem('booster', 250)">250G</button>
+        </div>
+        <div class="shop-item">
+            <div><strong>Amulet of Shield</strong><br><small>Prevents 1 wrong answer death</small></div>
+            <button class="buy-btn" onclick="buyItem('shield', 400)">400G</button>
+        </div>
+        <button class="next-btn" onclick="toggleShop()">EXIT SHOP</button>
+    </div>
+
     <div id="quest-log">
-        <h3>QUEST LOG UPDATED</h3>
-        <p id="log-text"></p>
-        <button class="next-btn" onclick="nextSlide()">CONTINUE EXPEDITION</button>
+        <strong style="color:var(--gold)">MAP INSIGHT:</strong>
+        <p id="insight-text" style="font-size: 0.9rem; margin: 10px 0;"></p>
+        <button class="next-btn" onclick="closeLog()">CONTINUE QUEST</button>
     </div>
 </div>
 
 <script>
     const database = [
-        { c: "AFRICA", q: "Where does the world's largest lion population live?", a: "The Serengeti", o: ["The Serengeti", "Kruger", "Sahara", "Okavango"], x: "The Serengeti is a grassland in Tanzania famous for its wildebeest migration." },
+        { c: "AFRICA", q: "Where does the world's largest lion population live?", a: "The Serengeti", o: ["The Serengeti", "Kruger", "Sahara", "Okavango"], x: "The Serengeti is a grassland in Tanzania famous for its massive wildebeest migration." },
         { c: "AFRICA", q: "What is the capital of Ethiopia?", a: "Addis Ababa", o: ["Nairobi", "Addis Ababa", "Asmara", "Lagos"], x: "Addis Ababa serves as the political and commercial heart of Ethiopia." },
         { c: "ASIA", q: "What is the largest city in the UAE?", a: "Dubai", o: ["Abu Dhabi", "Dubai", "Sharjah", "Doha"], x: "While Abu Dhabi is the capital, Dubai is the most populous city." },
         { c: "ASIA", q: "Where do the Tigris and Euphrates meet?", a: "Southern Iraq", o: ["Turkey", "Syria", "Southern Iraq", "Iran"], x: "This historic confluence occurs in southern Iraq before reaching the Persian Gulf." },
@@ -143,100 +155,101 @@
     ];
 
     let currentIdx = 0;
-    let hp = 3;
     let gold = 0;
+    let hp = 5;
     let streak = 0;
-    let deck = [];
+    let powerUps = { shield: false, booster: false };
+    let shuffledDeck = [];
 
-    function shuffle(array) {
-        return array.sort(() => Math.random() - 0.5);
+    function init() {
+        shuffledDeck = database.sort(() => Math.random() - 0.5);
+        render();
     }
 
-    function initGame() {
-        deck = shuffle([...database]);
-        renderCard();
-    }
+    function render() {
+        if (currentIdx >= shuffledDeck.length) { alert("YOU WON THE GAME!"); location.reload(); return; }
+        const d = shuffledDeck[currentIdx];
+        document.getElementById('location-name').innerText = `REGION: ${d.c}`;
+        const content = document.getElementById('game-content');
+        
+        let options = [...d.o].sort(() => Math.random() - 0.5);
 
-    function renderCard() {
-        if (currentIdx >= deck.length) {
-            showEnd(true);
-            return;
-        }
-        const data = deck[currentIdx];
-        const container = document.getElementById('card-container');
-        container.innerHTML = `
-            <div class="card enter" id="active-card">
-                <span class="category-tag">${data.c}</span>
-                <h2>${data.q}</h2>
-                <div class="options-grid">
-                    ${shuffle(data.o).map(opt => `<button class="btn-opt" onclick="checkChoice(this, '${opt}')">${opt}</button>`).join('')}
+        content.innerHTML = `
+            <div class="card">
+                <span class="q-tag">QUEST ${currentIdx + 1}/${shuffledDeck.length}</span>
+                <h2>${d.q}</h2>
+                <div class="opt-list">
+                    ${options.map(o => `<button class="opt" onclick="check(this, '${o}')">${o}</button>`).join('')}
                 </div>
             </div>
         `;
-        setTimeout(() => document.getElementById('active-card').classList.remove('enter'), 50);
-        document.getElementById('player-sprite').style.left = `${(currentIdx / deck.length) * 90}%`;
     }
 
-    function checkChoice(btn, choice) {
-        const data = deck[currentIdx];
-        const allBtns = document.querySelectorAll('.btn-opt');
-        allBtns.forEach(b => b.disabled = true);
+    function check(btn, choice) {
+        const d = shuffledDeck[currentIdx];
+        const all = document.querySelectorAll('.opt');
+        all.forEach(b => b.disabled = true);
 
-        if (choice === data.a) {
+        if (choice === d.a) {
             btn.classList.add('correct');
-            gold += (10 * (streak + 1));
+            let reward = 50 + (streak * 10);
+            if (powerUps.booster) reward *= 2;
+            gold += reward;
             streak++;
-            document.getElementById('gold').innerText = gold;
-            document.getElementById('streak').innerText = streak;
-            setTimeout(nextSlide, 800);
+            updateStats();
+            setTimeout(next, 600);
         } else {
-            btn.classList.add('wrong');
-            hp--;
-            streak = 0;
-            document.getElementById('hp').innerText = "❤".repeat(Math.max(0, hp)) + "🖤".repeat(3 - hp);
-            document.getElementById('streak').innerText = streak;
-            document.getElementById('game-world').classList.add('shake');
-            setTimeout(() => document.getElementById('game-world').classList.remove('shake'), 400);
+            if (powerUps.shield) {
+                powerUps.shield = false;
+                document.getElementById('badge-shield').style.display = 'none';
+                alert("SHIELD BROKEN! You survived.");
+            } else {
+                hp--;
+                streak = 0;
+                btn.classList.add('wrong');
+            }
             
-            // Show correct answer
-            allBtns.forEach(b => { if(b.innerText === data.a) b.classList.add('correct'); });
-
-            // Show Log
-            document.getElementById('log-text').innerText = data.x;
+            updateStats();
+            all.forEach(b => { if(b.innerText === d.a) b.classList.add('correct'); });
+            
+            document.getElementById('insight-text').innerText = d.x;
             document.getElementById('quest-log').style.display = 'block';
 
-            if (hp <= 0) {
-                setTimeout(() => showEnd(false), 1000);
-            }
+            if (hp <= 0) { alert("GAME OVER. Try again traveler."); location.reload(); }
         }
     }
 
-    function nextSlide() {
+    function updateStats() {
+        document.getElementById('hp-val').innerText = hp;
+        document.getElementById('gold-val').innerText = gold;
+    }
+
+    function next() {
+        currentIdx++;
+        render();
+    }
+
+    function closeLog() {
         document.getElementById('quest-log').style.display = 'none';
-        const card = document.getElementById('active-card');
-        if (card) card.classList.add('exit');
-        
-        setTimeout(() => {
-            currentIdx++;
-            renderCard();
-        }, 400);
+        next();
     }
 
-    function showEnd(victory) {
-        const title = victory ? "EXPEDITION CLEAR!" : "YOU DIED";
-        const rank = gold > 400 ? "GOD OF MAPS" : "NOVICE TRAVELER";
-        document.getElementById('game-world').innerHTML = `
-            <div style="text-align:center; padding: 50px; font-family:'Press Start 2P';">
-                <h1 style="color:${victory ? 'var(--success)' : 'var(--danger)'}">${title}</h1>
-                <p style="font-size:10px">FINAL GOLD: ${gold}</p>
-                <p style="font-size:10px; color:var(--gold)">RANK: ${rank}</p>
-                <button class="next-btn" style="margin-top:20px" onclick="location.reload()">RESTART QUEST</button>
-            </div>
-        `;
+    function toggleShop() {
+        const shop = document.getElementById('shop-overlay');
+        shop.style.display = (shop.style.display === 'block') ? 'none' : 'block';
     }
 
-    initGame();
+    function buyItem(type, cost) {
+        if (gold < cost) { alert("Not enough gold!"); return; }
+        gold -= cost;
+        if (type === 'health') hp++;
+        if (type === 'booster') { powerUps.booster = true; document.getElementById('badge-booster').style.display = 'block'; }
+        if (type === 'shield') { powerUps.shield = true; document.getElementById('badge-shield').style.display = 'block'; }
+        updateStats();
+        alert("Purchase Successful!");
+    }
+
+    init();
 </script>
-
 </body>
 </html>
