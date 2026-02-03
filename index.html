@@ -3,102 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Geography Quiz</title>
+    <title>GeoQuest: The Ultimate Map Challenge</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; background-color: #f4f7f6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .quiz-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        .question { margin-bottom: 25px; padding: 15px; border-left: 5px solid #3498db; background: #fafafa; }
-        .options { list-style: none; padding: 0; }
-        .options li { margin: 10px 0; }
-        button { display: block; width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; transition: background 0.3s; }
-        button:hover { background: #2980b9; }
-        #results { margin-top: 20px; text-align: center; font-weight: bold; font-size: 22px; display: none; }
-        .correct { color: #27ae60; }
-        .incorrect { color: #e74c3c; }
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --dark: #1e293b;
+        }
+        body { font-family: 'Press Start 2P', cursive, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        /* Simple fallback font if Press Start 2P isn't loaded */
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+
+        .game-container { background: #1e293b; width: 90%; max-width: 600px; padding: 30px; border-radius: 20px; border: 4px solid #334155; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        /* Stats Bar */
+        .stats-bar { display: flex; justify-content: space-between; margin-bottom: 20px; background: #0f172a; padding: 10px; border-radius: 10px; font-size: 0.9rem; border: 2px solid var(--primary); }
+        .progress-container { width: 100%; height: 10px; background: #334155; border-radius: 5px; margin-bottom: 20px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
+
+        /* Slide Logic */
+        .slide { display: none; text-align: center; animation: fadeIn 0.5s; }
+        .slide.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .question-text { font-size: 1.4rem; margin-bottom: 25px; min-height: 80px; }
+        
+        .options-grid { display: grid; gap: 15px; }
+        .opt-btn { background: #334155; border: 2px solid #475569; color: white; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+        .opt-btn:hover { background: #475569; transform: scale(1.02); }
+        .opt-btn.correct { background: var(--success) !important; border-color: #f0fff4; transform: scale(1.05); }
+        .opt-btn.wrong { background: var(--danger) !important; border-color: #fff5f5; opacity: 0.7; }
+
+        #feedback-msg { height: 30px; margin-top: 15px; font-weight: bold; font-size: 1.2rem; }
+        .victory-screen { text-align: center; }
+        .rank-tag { font-size: 2rem; color: #fbbf24; margin: 20px 0; display: block; }
     </style>
 </head>
 <body>
 
-<div class="quiz-container">
-    <h1>🌍 Global Geography Quiz</h1>
-    <form id="quizForm">
-        <div id="questionsContainer"></div>
-        <button type="button" onclick="calculateScore()">Submit Quiz</button>
-    </form>
-    <div id="results"></div>
+<div class="game-container">
+    <div class="stats-bar">
+        <span>LVL: <span id="lvl">1</span></span>
+        <span>XP: <span id="xp">0</span></span>
+        <span>HP: <span id="hp">❤️❤️❤️</span></span>
+    </div>
+    <div class="progress-container"><div id="progress-bar"></div></div>
+
+    <div id="game-box">
+        </div>
+
+    <div id="feedback-msg"></div>
 </div>
 
 <script>
     const quizData = [
-        { q: "Where does the world’s largest population of lions live?", a: "The Serengeti (Tanzania)", options: ["The Serengeti (Tanzania)", "Kruger National Park", "Maasai Mara", "Okavango Delta"] },
-        { q: "What is the capital of Ethiopia?", a: "Addis Ababa", options: ["Nairobi", "Addis Ababa", "Asmara", "Mogadishu"] },
-        { q: "Which city is the largest in the United Arab Emirates?", a: "Dubai", options: ["Abu Dhabi", "Sharjah", "Dubai", "Doha"] },
-        { q: "The confluence of the Tigris and Euphrates Rivers occurs in which country?", a: "Iraq", options: ["Syria", "Turkey", "Iran", "Iraq"] },
-        { q: "The Gobi Desert stretches across northern China and which other country?", a: "Mongolia", options: ["Kazakhstan", "Mongolia", "Russia", "Vietnam"] },
-        { q: "What is the primary language spoken in Hong Kong?", a: "Cantonese", options: ["Mandarin", "Cantonese", "Hakka", "English"] },
-        { q: "Ankara and Istanbul are major cities in which country?", a: "Turkey", options: ["Greece", "Turkey", "Egypt", "Jordan"] },
-        { q: "What is the largest island belonging entirely to Indonesia by area?", a: "Sumatra", options: ["Java", "Bali", "Sumatra", "Borneo"] },
-        { q: "A snow leopard appears on the coat of arms of which Kazakh city?", a: "Almaty", options: ["Astana", "Almaty", "Shymkent", "Aktau"] },
-        { q: "What was the former name of the Indian port city Mumbai?", a: "Bombay", options: ["Calcutta", "Madras", "Bombay", "Bangalore"] },
-        { q: "What is the capital of Samoa?", a: "Apia", options: ["Suva", "Nuku'alofa", "Apia", "Honiara"] },
-        { q: "What are the two largest cities in Australia?", a: "Sydney and Melbourne", options: ["Sydney and Melbourne", "Sydney and Brisbane", "Melbourne and Perth", "Canberra and Sydney"] },
-        { q: "Which is the largest country in Western Europe that is NOT a member of the EU?", a: "Switzerland", options: ["Norway", "United Kingdom", "Switzerland", "Iceland"] },
-        { q: "In which Spanish city does the 'running of the bulls' take place?", a: "Pamplona", options: ["Madrid", "Barcelona", "Seville", "Pamplona"] },
-        { q: "Which European capital is famous for its large number of canals?", a: "Amsterdam", options: ["Venice", "Amsterdam", "Copenhagen", "Bruges"] },
-        { q: "Kyiv is the capital of which country?", a: "Ukraine", options: ["Russia", "Poland", "Ukraine", "Belarus"] },
-        { q: "Where is the Nobel Peace Prize awarded?", a: "Oslo, Norway", options: ["Stockholm, Sweden", "Geneva, Switzerland", "Oslo, Norway", "Copenhagen, Denmark"] },
-        { q: "Manchester was a major hub of which historical era?", a: "Industrial Revolution", options: ["The Renaissance", "Industrial Revolution", "The Enlightenment", "The Space Age"] },
-        { q: "Which location recorded the hottest temperature on Earth?", a: "Furnace Creek, Death Valley", options: ["Sahara Desert", "Furnace Creek, Death Valley", "Lut Desert", "Alice Springs"] },
-        { q: "The Denali Star rail service operates in which U.S. state?", a: "Alaska", options: ["Colorado", "Montana", "Alaska", "Washington"] },
-        { q: "Portland, Oregon is located near the mouth of which river?", a: "Willamette River", options: ["Columbia River", "Willamette River", "Snake River", "Oregon River"] },
-        { q: "Lake Mead was created by the construction of which dam?", a: "Hoover Dam", options: ["Grand Coulee Dam", "Hoover Dam", "Glen Canyon Dam", "Fort Peck Dam"] },
-        { q: "Which is the longest river in the United States?", a: "Missouri River", options: ["Mississippi River", "Missouri River", "Colorado River", "Rio Grande"] },
-        { q: "The CN Tower is located in which Canadian province?", a: "Ontario", options: ["Quebec", "British Columbia", "Ontario", "Alberta"] },
-        { q: "Which is the primary river of Venezuela?", a: "Orinoco", options: ["Amazon", "Orinoco", "Parana", "Magdalena"] },
-        { q: "What is the longest continental mountain range in the world?", a: "The Andes", options: ["The Rockies", "The Himalayas", "The Andes", "The Alps"] },
-        { q: "Bridgetown is the capital of which island country?", a: "Barbados", options: ["Jamaica", "The Bahamas", "Barbados", "Saint Lucia"] },
-        { q: "Asunción is the capital of which landlocked country?", a: "Paraguay", options: ["Bolivia", "Uruguay", "Paraguay", "Ecuador"] }
+        { q: "Where does the world’s largest population of lions live?", a: "The Serengeti", options: ["The Serengeti", "Kruger Park", "Maasai Mara", "The Sahara"] },
+        { q: "Which is the largest city in the United Arab Emirates?", a: "Dubai", options: ["Abu Dhabi", "Dubai", "Sharjah", "Muscat"] },
+        { q: "The Gobi Desert stretches across northern China and...", a: "Mongolia", options: ["Kazakhstan", "Mongolia", "Russia", "India"] },
+        { q: "What is the capital of Ethiopia?", a: "Addis Ababa", options: ["Nairobi", "Addis Ababa", "Accra", "Lagos"] },
+        { q: "Sumatra is the largest island belonging entirely to which nation?", a: "Indonesia", options: ["Philippines", "Malaysia", "Indonesia", "Japan"] },
+        { q: "What was Mumbai's former name?", a: "Bombay", options: ["Madras", "Calcutta", "Bombay", "Ceylon"] },
+        { q: "Which country hosts the 'Running of the Bulls' in Pamplona?", a: "Spain", options: ["Portugal", "Mexico", "Spain", "Italy"] },
+        { q: "Which city is the capital of Ukraine?", a: "Kyiv", options: ["Lviv", "Kyiv", "Odessa", "Crimea"] },
+        { q: "The Nobel Peace Prize is specifically awarded in which city?", a: "Oslo", options: ["Stockholm", "Oslo", "Geneva", "Copenhagen"] },
+        { q: "Which river is the longest in the United States?", a: "Missouri River", options: ["Mississippi", "Missouri River", "Colorado", "Rio Grande"] },
+        { q: "The CN Tower is a major attraction in which Canadian province?", a: "Ontario", options: ["Quebec", "Ontario", "Alberta", "BC"] },
+        { q: "What is the primary river of Venezuela?", a: "Orinoco", options: ["Amazon", "Orinoco", "Magdalena", "Plata"] },
+        { q: "Asunción is the capital of which country?", a: "Paraguay", options: ["Uruguay", "Paraguay", "Bolivia", "Chile"] },
+        { q: "Which city recorded the hottest temperature on Earth?", a: "Furnace Creek", options: ["Death Valley (Furnace Creek)", "Sahara", "Lut Desert", "Dubai"] }
     ];
 
-    const container = document.getElementById('questionsContainer');
+    let currentIdx = 0;
+    let xp = 0;
+    let lvl = 1;
+    let lives = 3;
 
-    quizData.forEach((item, index) => {
-        const qDiv = document.createElement('div');
-        qDiv.className = 'question';
-        qDiv.innerHTML = `<p><strong>${index + 1}. ${item.q}</strong></p>`;
-        
-        const optionsList = document.createElement('ul');
-        optionsList.className = 'options';
-        
-        item.options.forEach(option => {
-            optionsList.innerHTML += `
-                <li>
-                    <label>
-                        <input type="radio" name="q${index}" value="${option}"> ${option}
-                    </label>
-                </li>`;
-        });
-        
-        qDiv.appendChild(optionsList);
-        container.appendChild(qDiv);
-    });
+    const gameBox = document.getElementById('game-box');
+    const feedback = document.getElementById('feedback-msg');
+    const xpDisplay = document.getElementById('xp');
+    const lvlDisplay = document.getElementById('lvl');
+    const hpDisplay = document.getElementById('hp');
+    const progressBar = document.getElementById('progress-bar');
 
-    function calculateScore() {
-        let score = 0;
-        quizData.forEach((item, index) => {
-            const selected = document.querySelector(`input[name="q${index}"]:checked`);
-            if (selected && selected.value === item.a) {
-                score++;
-            }
-        });
-        
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = `You scored ${score} out of ${quizData.length}!`;
-        resultsDiv.className = score === quizData.length ? 'correct' : 'incorrect';
-        window.scrollTo(0, document.body.scrollHeight);
+    function loadSlide() {
+        if (currentIdx >= quizData.length) {
+            showVictory();
+            return;
+        }
+
+        const data = quizData[currentIdx];
+        feedback.innerHTML = "";
+        progressBar.style.width = `${(currentIdx / quizData.length) * 100}%`;
+
+        gameBox.innerHTML = `
+            <div class="slide active">
+                <div class="question-text">${data.q}</div>
+                <div class="options-grid">
+                    ${data.options.map(opt => `<button class="opt-btn" onclick="checkAnswer(this, '${opt}')">${opt}</button>`).join('')}
+                </div>
+            </div>
+        `;
     }
+
+    function checkAnswer(btn, choice) {
+        const correct = quizData[currentIdx].a;
+        const buttons = document.querySelectorAll('.opt-btn');
+        buttons.forEach(b => b.disabled = true); // Prevent double clicking
+
+        if (choice === correct) {
+            btn.classList.add('correct');
+            feedback.innerHTML = "<span style='color:var(--success)'>+100 XP! CRITICAL HIT!</span>";
+            xp += 100;
+            if (xp % 300 === 0) {
+                lvl++;
+                lvlDisplay.innerText = lvl;
+                feedback.innerHTML = "<span style='color:var(--primary)'>LEVEL UP!</span>";
+            }
+        } else {
+            btn.classList.add('wrong');
+            feedback.innerHTML = `<span style='color:var(--danger)'>MISS! Correct: ${correct}</span>`;
+            lives--;
+            hpDisplay.innerText = "❤️".repeat(Math.max(0, lives));
+        }
+
+        xpDisplay.innerText = xp;
+        
+        setTimeout(() => {
+            currentIdx++;
+            loadSlide();
+        }, 1500);
+    }
+
+    function showVictory() {
+        progressBar.style.width = "100%";
+        let rank = xp > 1000 ? "GEOGRAPHY ARCHMAGE" : "WANDERER";
+        gameBox.innerHTML = `
+            <div class="victory-screen">
+                <h2>QUEST COMPLETE!</h2>
+                <p>Final XP: ${xp}</p>
+                <span class="rank-tag">${rank}</span>
+                <button class="opt-btn" onclick="location.reload()">RESTART QUEST</button>
+            </div>
+        `;
+    }
+
+    loadSlide();
 </script>
 
 </body>
